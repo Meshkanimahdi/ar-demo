@@ -27,6 +27,978 @@
     color: var(--text);
     font-family: 'Segoe UI', system-ui, sans-serif;
     min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .modal {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 200;
+  }
+
+  #mindar-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .modal-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(1rem, env(safe-area-inset-top)) 1.25rem 1rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
+    pointer-events: none;
+  }
+
+  .modal-title {
+    font-size: .95rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .close-btn {
+    pointer-events: all;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #debug {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: rgba(0,0,0,0.75);
+    color: #4ade80;
+    font-size: 12px;
+    font-family: monospace;
+    padding: 8px 12px;
+    line-height: 1.6;
+    pointer-events: none;
+    direction: ltr;
+    text-align: left;
+    white-space: pre-wrap;
+  }
+
+  .scan-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .scan-box {
+    width: 230px;
+    height: 230px;
+    position: relative;
+  }
+
+  .scan-box::before,
+  .scan-box::after,
+  .scan-box .bl,
+  .scan-box .br {
+    content: '';
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border-color: var(--accent);
+    border-style: solid;
+  }
+
+  .scan-box::before {
+    top: 0;
+    left: 0;
+    border-width: 3px 0 0 3px;
+    border-radius: 5px 0 0 0;
+  }
+
+  .scan-box::after {
+    top: 0;
+    right: 0;
+    border-width: 3px 3px 0 0;
+    border-radius: 0 5px 0 0;
+  }
+
+  .scan-box .bl {
+    bottom: 0;
+    left: 0;
+    border-width: 0 0 3px 3px;
+    border-radius: 0 0 0 5px;
+  }
+
+  .scan-box .br {
+    bottom: 0;
+    right: 0;
+    border-width: 0 3px 3px 0;
+    border-radius: 0 0 5px 0;
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--accent), transparent);
+    animation: scanAnim 2s ease-in-out infinite;
+    top: 20px;
+  }
+
+  @keyframes scanAnim {
+    0%,100% {
+      top: 18px;
+      opacity: .5;
+    }
+
+    50% {
+      top: calc(100% - 20px);
+      opacity: 1;
+    }
+  }
+
+  .scan-label {
+    margin-top: 1rem;
+    font-size: .82rem;
+    color: rgba(255,255,255,.85);
+    letter-spacing: .03em;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  .ar-control-panel {
+    position: absolute;
+    left: 50%;
+    bottom: 72px;
+    transform: translateX(-50%);
+    z-index: 998;
+    display: none;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+  }
+
+  .ar-control-panel.active {
+    display: flex;
+  }
+
+  .ar-small-btn {
+    background: rgba(19,19,26,0.82);
+    border: 1px solid rgba(108,99,255,0.35);
+    color: #fff;
+    border-radius: 999px;
+    padding: .75rem 1.05rem;
+    font-size: .85rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ar-small-btn:active {
+    transform: scale(.96);
+  }
+
+  .audio-unlock {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    background: rgba(10,10,15,.88);
+    border: 1px solid rgba(108,99,255,.35);
+    border-radius: 24px;
+    padding: 1.2rem;
+    width: min(86vw, 360px);
+    text-align: center;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .audio-unlock.active {
+    display: flex;
+  }
+
+  .audio-unlock p {
+    color: rgba(255,255,255,.82);
+    font-size: .9rem;
+    line-height: 1.8;
+  }
+
+  .audio-unlock button {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: .85rem 1.4rem;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-width: 160px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pulse {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-left: 5px;
+    animation: pulseAnim 1.4s ease-in-out infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes pulseAnim {
+    0%,100% {
+      opacity: .3;
+      transform: scale(.8);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="modal" id="modal">
+
+  <div id="mindar-container"></div>
+
+  <div class="modal-bar">
+    <span class="modal-title" id="modal-title">AR Scanner <span class="pulse"></span></span>
+    <button class="close-btn" id="closeBtn" type="button">✕</button>
+  </div>
+
+  <div class="scan-overlay" id="scanOverlay">
+    <div class="scan-box">
+      <div class="bl"></div>
+      <div class="br"></div>
+      <div class="scan-line"></div>
+    </div>
+
+    <div class="scan-label" id="scanLabel">
+      در حال راه‌اندازی دوربین...<br>
+      هرکدام از سه تصویر را جلوی دوربین بگیرید.
+    </div>
+  </div>
+
+  <div class="ar-control-panel" id="arControlPanel">
+    <button class="ar-small-btn" id="soundBtn" type="button">🔊 صدا</button>
+    <button class="ar-small-btn" id="rescanBtn" type="button">🔄 اسکن مجدد</button>
+  </div>
+
+  <div class="audio-unlock" id="audioUnlock">
+    <p>
+      برای پخش صدا در موبایل، یک بار باید اجازه پخش صوت فعال شود.
+    </p>
+    <button id="audioUnlockBtn" type="button">فعال‌سازی صدا</button>
+  </div>
+
+  <div id="debug">در حال آماده‌سازی...</div>
+
+</div>
+
+<script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+
+<script type="importmap-shim">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+  }
+}
+</script>
+
+<script type="module-shim">
+import * as THREE from "three";
+import { MindARThree } from "mindar-image-three";
+
+/*
+  خیلی مهم:
+  این فایل باید یک mind چندتارگته باشد.
+  ترتیب داخل compiler باید همین باشد:
+
+  target index 0 = a01.webp
+  target index 1 = a02.jpg
+  target index 2 = a03.jpg
+*/
+const MULTI_TARGET_MIND_FILE = "./targets.mind";
+
+const SAMPLES = [
+  {
+    label: "Sample 1 — Audio",
+    type: "audio",
+    targetIndex: 0,
+    targetImage: "./a01.webp",
+    mediaUrl: "./A01.mp3"
+  },
+  {
+    label: "Sample 2 — Video",
+    type: "video",
+    targetIndex: 1,
+    targetImage: "./a02.jpg",
+    mediaUrl: "./A02.mp4"
+  },
+  {
+    label: "Sample 3 — Video",
+    type: "video",
+    targetIndex: 2,
+    targetImage: "./a03.jpg",
+    mediaUrl: "./A03.mp4"
+  }
+];
+
+let mindarInstance = null;
+let currentActiveIndex = null;
+let isStarting = false;
+let audioUnlocked = false;
+
+const anchors = [];
+const arMeshes = [];
+const textures = [];
+const mediaElements = [];
+const targetAspects = [];
+
+function log(message) {
+  const debugBox = document.getElementById("debug");
+
+  if (debugBox) {
+    debugBox.textContent = message;
+  }
+
+  console.log(message);
+}
+
+function loadImageAspect(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+
+    img.onload = () => {
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+
+      if (!width || !height) {
+        resolve(16 / 9);
+        return;
+      }
+
+      resolve(width / height);
+    };
+
+    img.onerror = () => {
+      resolve(16 / 9);
+    };
+
+    img.src = src;
+  });
+}
+
+function applyCoverUV(texture, mediaAspect, targetAspect) {
+  texture.offset.set(0, 0);
+  texture.repeat.set(1, 1);
+
+  if (!mediaAspect || !targetAspect) return;
+
+  if (mediaAspect > targetAspect) {
+    const repeatX = targetAspect / mediaAspect;
+    texture.repeat.set(repeatX, 1);
+    texture.offset.set((1 - repeatX) / 2, 0);
+  } else if (mediaAspect < targetAspect) {
+    const repeatY = mediaAspect / targetAspect;
+    texture.repeat.set(1, repeatY);
+    texture.offset.set(0, (1 - repeatY) / 2);
+  }
+}
+
+function stopAllMediaExcept(indexToKeep = null) {
+  mediaElements.forEach((media, index) => {
+    if (!media) return;
+    if (index === indexToKeep) return;
+
+    try {
+      media.pause();
+    } catch (error) {}
+  });
+}
+
+function hideAudioUnlock() {
+  const audioUnlock = document.getElementById("audioUnlock");
+  if (audioUnlock) audioUnlock.classList.remove("active");
+}
+
+function showAudioUnlock() {
+  const audioUnlock = document.getElementById("audioUnlock");
+  if (audioUnlock) audioUnlock.classList.add("active");
+}
+
+function clearARContent() {
+  anchors.forEach((anchor, index) => {
+    const mesh = arMeshes[index];
+
+    if (anchor && mesh) {
+      try {
+        anchor.group.remove(mesh);
+      } catch (error) {}
+    }
+  });
+
+  textures.forEach(texture => {
+    if (!texture) return;
+
+    try {
+      texture.dispose();
+    } catch (error) {}
+  });
+
+  arMeshes.forEach(mesh => {
+    if (!mesh) return;
+
+    try {
+      if (mesh.geometry) mesh.geometry.dispose();
+      if (mesh.material) mesh.material.dispose();
+    } catch (error) {}
+  });
+
+  mediaElements.forEach(media => {
+    if (!media) return;
+
+    try {
+      media.pause();
+      media.removeAttribute("src");
+      media.load();
+    } catch (error) {}
+  });
+
+  anchors.length = 0;
+  arMeshes.length = 0;
+  textures.length = 0;
+  mediaElements.length = 0;
+  targetAspects.length = 0;
+
+  currentActiveIndex = null;
+
+  const arControlPanel = document.getElementById("arControlPanel");
+  if (arControlPanel) {
+    arControlPanel.classList.remove("active");
+  }
+
+  hideAudioUnlock();
+}
+
+async function stopARInstance() {
+  clearARContent();
+
+  if (!mindarInstance) return;
+
+  try {
+    if (mindarInstance.renderer) {
+      mindarInstance.renderer.setAnimationLoop(null);
+    }
+  } catch (error) {
+    console.warn("Renderer stop warning:", error);
+  }
+
+  try {
+    await mindarInstance.stop();
+  } catch (error) {
+    console.warn("MindAR stop warning:", error);
+  }
+
+  mindarInstance = null;
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function createAudioCardTexture(textLine1, textLine2) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 640;
+
+  const ctx = canvas.getContext("2d");
+
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, "#6c63ff");
+  gradient.addColorStop(1, "#ff6584");
+
+  ctx.fillStyle = "rgba(10,10,15,0.88)";
+  roundRect(ctx, 40, 40, canvas.width - 80, canvas.height - 80, 48);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 5;
+  roundRect(ctx, 40, 40, canvas.width - 80, canvas.height - 80, 48);
+  ctx.stroke();
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(canvas.width / 2, 210, 86, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 92px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("♪", canvas.width / 2, 210);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 54px Arial";
+  ctx.fillText(textLine1, canvas.width / 2, 380);
+
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  ctx.font = "34px Arial";
+  ctx.fillText(textLine2, canvas.width / 2, 445);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+
+  return texture;
+}
+
+function createAudioElement(src) {
+  const audio = document.createElement("audio");
+
+  audio.src = src;
+  audio.loop = true;
+  audio.preload = "auto";
+
+  return audio;
+}
+
+function createVideoElement(src) {
+  const video = document.createElement("video");
+
+  video.src = src;
+  video.crossOrigin = "anonymous";
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  video.preload = "auto";
+
+  return video;
+}
+
+function createAudioARMesh(sampleIndex) {
+  const sample = SAMPLES[sampleIndex];
+  const aspect = targetAspects[sampleIndex] || 16 / 9;
+
+  const texture = createAudioCardTexture("Audio Experience", "Sound attached to this image");
+  textures[sampleIndex] = texture;
+
+  const targetWidth = 1;
+  const targetHeight = 1 / aspect;
+
+  const geometry = new THREE.PlaneGeometry(targetWidth, targetHeight);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(0, 0, 0.02);
+
+  arMeshes[sampleIndex] = mesh;
+
+  const audio = createAudioElement(sample.mediaUrl);
+  audio.addEventListener("error", () => {
+    log("❌ Audio error for target " + sample.targetIndex + ". Check MP3 path and format.");
+  });
+
+  mediaElements[sampleIndex] = audio;
+  audio.load();
+
+  return mesh;
+}
+
+function createVideoARMesh(sampleIndex, videoElement) {
+  const sample = SAMPLES[sampleIndex];
+  const targetAspect = targetAspects[sampleIndex] || 16 / 9;
+
+  const texture = new THREE.VideoTexture(videoElement);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  const videoWidth = videoElement.videoWidth || 1920;
+  const videoHeight = videoElement.videoHeight || 1080;
+  const videoAspect = videoWidth / videoHeight;
+
+  applyCoverUV(texture, videoAspect, targetAspect);
+
+  textures[sampleIndex] = texture;
+
+  const targetWidth = 1;
+  const targetHeight = 1 / targetAspect;
+
+  const geometry = new THREE.PlaneGeometry(targetWidth, targetHeight);
+
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: false,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(0, 0, 0.02);
+  mesh.rotation.set(0, 0, 0);
+
+  arMeshes[sampleIndex] = mesh;
+
+  log(
+    "✅ Video mesh ready for target " + sample.targetIndex + "\n" +
+    "target aspect: " + targetAspect.toFixed(4) + "\n" +
+    "video aspect: " + videoAspect.toFixed(4)
+  );
+
+  return mesh;
+}
+
+async function prepareAllTargets() {
+  log("Reading all target image sizes...");
+
+  for (let i = 0; i < SAMPLES.length; i++) {
+    targetAspects[i] = await loadImageAspect(SAMPLES[i].targetImage);
+  }
+
+  log(
+    "Target aspects ready:\n" +
+    targetAspects.map((aspect, index) => "Target " + index + ": " + aspect.toFixed(4)).join("\n")
+  );
+}
+
+function setupAnchors() {
+  SAMPLES.forEach((sample, sampleIndex) => {
+    const anchor = mindarInstance.addAnchor(sample.targetIndex);
+    anchors[sampleIndex] = anchor;
+
+    if (sample.type === "audio") {
+      const audioMesh = createAudioARMesh(sampleIndex);
+      anchor.group.add(audioMesh);
+    }
+
+    if (sample.type === "video") {
+      const video = createVideoElement(sample.mediaUrl);
+      mediaElements[sampleIndex] = video;
+
+      video.addEventListener("loadedmetadata", () => {
+        if (arMeshes[sampleIndex]) return;
+
+        const mesh = createVideoARMesh(sampleIndex, video);
+        anchor.group.add(mesh);
+
+        log("✅ Video attached to target " + sample.targetIndex);
+      });
+
+      video.addEventListener("error", () => {
+        log("❌ Video error for target " + sample.targetIndex + ". Check MP4 codec: H.264 + AAC.");
+      });
+
+      video.load();
+    }
+
+    anchor.onTargetFound = async () => {
+      currentActiveIndex = sampleIndex;
+
+      const scanOverlay = document.getElementById("scanOverlay");
+      const arControlPanel = document.getElementById("arControlPanel");
+      const modalTitle = document.getElementById("modal-title");
+
+      scanOverlay.style.display = "none";
+      arControlPanel.classList.add("active");
+      modalTitle.innerHTML = sample.label + ' <span class="pulse"></span>';
+
+      stopAllMediaExcept(sampleIndex);
+
+      log("✅ Target " + sample.targetIndex + " found: " + sample.label);
+
+      const media = mediaElements[sampleIndex];
+
+      if (!media) {
+        log("Media not ready yet.");
+        return;
+      }
+
+      try {
+        if (sample.type === "video") {
+          media.muted = true;
+          await media.play();
+          log("▶ Video AR playing on target " + sample.targetIndex + ". Tap sound for audio.");
+        } else {
+          await media.play();
+          log("▶ Audio playing for target " + sample.targetIndex);
+        }
+      } catch (error) {
+        log("⚠️ Autoplay blocked. Tap activate sound.");
+        showAudioUnlock();
+      }
+    };
+
+    anchor.onTargetLost = () => {
+      const media = mediaElements[sampleIndex];
+
+      if (media) {
+        try {
+          media.pause();
+        } catch (error) {}
+      }
+
+      if (currentActiveIndex === sampleIndex) {
+        currentActiveIndex = null;
+      }
+
+      log("Target " + sample.targetIndex + " lost.");
+    };
+  });
+}
+
+async function startAR() {
+  if (isStarting) return;
+
+  isStarting = true;
+
+  const scanLabel = document.getElementById("scanLabel");
+
+  try {
+    await stopARInstance();
+
+    await prepareAllTargets();
+
+    log("Loading multi-target file:\n" + MULTI_TARGET_MIND_FILE);
+
+    mindarInstance = new MindARThree({
+      container: document.getElementById("mindar-container"),
+      imageTargetSrc: MULTI_TARGET_MIND_FILE,
+      maxTrack: 1,
+      uiLoading: "no",
+      uiScanning: "no",
+      uiError: "no",
+      filterMinCF: 0.001,
+      filterBeta: 0.01,
+      missTolerance: 5,
+      warmupTolerance: 3
+    });
+
+    const { renderer, scene, camera } = mindarInstance;
+
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    setupAnchors();
+
+    log("Starting camera...");
+
+    await mindarInstance.start();
+
+    scanLabel.innerHTML = "دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.";
+    log("✅ Camera is active. Show any of the 3 target images.");
+
+    renderer.setAnimationLoop(() => {
+      const audioSampleIndex = 0;
+      const audioMesh = arMeshes[audioSampleIndex];
+
+      if (audioMesh && currentActiveIndex === audioSampleIndex) {
+        audioMesh.rotation.z = Math.sin(Date.now() * 0.002) * 0.035;
+        const scale = 1 + Math.sin(Date.now() * 0.004) * 0.025;
+        audioMesh.scale.set(scale, scale, scale);
+      }
+
+      renderer.render(scene, camera);
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    const errorMessage = error && error.message ? error.message : String(error);
+
+    scanLabel.textContent = "خطا در راه‌اندازی AR";
+    log("❌ Error:\n" + errorMessage);
+  } finally {
+    isStarting = false;
+  }
+}
+
+async function enableSound() {
+  hideAudioUnlock();
+
+  audioUnlocked = true;
+
+  if (currentActiveIndex === null) {
+    log("No active target yet.");
+    return;
+  }
+
+  const sample = SAMPLES[currentActiveIndex];
+  const media = mediaElements[currentActiveIndex];
+
+  if (!sample || !media) {
+    log("No media is ready.");
+    return;
+  }
+
+  try {
+    if (sample.type === "video") {
+      media.muted = false;
+      await media.play();
+      log("🔊 Video sound enabled for target " + sample.targetIndex);
+    } else {
+      await media.play();
+      log("🔊 Audio enabled for target " + sample.targetIndex);
+    }
+  } catch (error) {
+    const errorMessage = error && error.message ? error.message : String(error);
+    log("❌ Sound play error:\n" + errorMessage);
+  }
+}
+
+function rescan() {
+  stopAllMediaExcept(null);
+
+  currentActiveIndex = null;
+
+  const scanOverlay = document.getElementById("scanOverlay");
+  const scanLabel = document.getElementById("scanLabel");
+  const arControlPanel = document.getElementById("arControlPanel");
+  const modalTitle = document.getElementById("modal-title");
+
+  scanOverlay.style.display = "flex";
+  scanLabel.innerHTML = "دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.";
+  arControlPanel.classList.remove("active");
+  modalTitle.innerHTML = 'AR Scanner <span class="pulse"></span>';
+
+  hideAudioUnlock();
+
+  log("✅ Ready to scan any target.");
+}
+
+async function closeAR() {
+  await stopARInstance();
+
+  document.getElementById("scanOverlay").style.display = "flex";
+  document.getElementById("mindar-container").innerHTML = "";
+  document.getElementById("arControlPanel").classList.remove("active");
+
+  log("AR closed");
+}
+
+function bindButtons() {
+  const closeBtn = document.getElementById("closeBtn");
+  const rescanBtn = document.getElementById("rescanBtn");
+  const soundBtn = document.getElementById("soundBtn");
+  const audioUnlockBtn = document.getElementById("audioUnlockBtn");
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeAR);
+  }
+
+  if (rescanBtn) {
+    rescanBtn.addEventListener("click", rescan);
+  }
+
+  if (soundBtn) {
+    soundBtn.addEventListener("click", enableSound);
+  }
+
+  if (audioUnlockBtn) {
+    audioUnlockBtn.addEventListener("click", enableSound);
+  }
+
+  log("✅ App loaded. Starting camera automatically...");
+}
+
+bindButtons();
+
+window.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeAR();
+  }
+});
+
+window.addEventListener("load", () => {
+  startAR();
+});
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AR Demo</title>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --text:#f0eeff;
+    --muted:#8887a0;
+    --border: rgba(108,99,255,0.2);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
     overflow-x: hidden;
   }
 

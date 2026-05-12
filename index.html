@@ -176,17 +176,13 @@
   .sound-control {
     position: fixed;
     left: 50%;
-    bottom: calc(env(safe-area-inset-bottom) + 92px);
+    bottom: calc(env(safe-area-inset-bottom) + 96px);
     transform: translateX(-50%);
-    z-index: 2147483600;
-    display: none;
+    z-index: 2147483647;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     pointer-events: auto;
-  }
-
-  .sound-control.active {
-    display: flex !important;
   }
 
   .sound-control button {
@@ -212,7 +208,7 @@
     position: fixed;
     left: 50%;
     top: 50%;
-    z-index: 2147483600;
+    z-index: 2147483647;
     transform: translate(-50%, -50%);
     display: none;
     width: min(86vw, 360px);
@@ -298,7 +294,7 @@
   </div>
 
   <div class="sound-control" id="soundControl">
-    <button id="soundBtn" type="button">🔊 روشن کردن صدای ویدیو</button>
+    <button id="soundBtn" type="button">🔊 صدای ویدیو</button>
   </div>
 
   <div class="audio-unlock" id="audioUnlock">
@@ -401,24 +397,6 @@ function hideScanOverlay() {
 
   if (scanOverlay) {
     scanOverlay.style.display = "none";
-  }
-}
-
-function showSoundControl() {
-  const soundControl = document.getElementById("soundControl");
-
-  if (soundControl) {
-    soundControl.classList.add("active");
-    soundControl.style.display = "flex";
-  }
-}
-
-function hideSoundControl() {
-  const soundControl = document.getElementById("soundControl");
-
-  if (soundControl) {
-    soundControl.classList.remove("active");
-    soundControl.style.display = "none";
   }
 }
 
@@ -530,7 +508,6 @@ function clearARContent() {
 
   currentActiveIndex = null;
   hideAudioUnlock();
-  hideSoundControl();
 }
 
 async function stopARInstance() {
@@ -778,29 +755,22 @@ function setupAnchors() {
       try {
         if (sample.type === "video") {
           media.muted = !videoSoundEnabled;
+          media.volume = 1;
+
           await media.play();
 
-          if (!videoSoundEnabled) {
-            showSoundControl();
-          } else {
-            hideSoundControl();
-          }
-
-          log("▶ Video AR playing on target " + sample.targetIndex + ". Sound button state updated.");
+          log("▶ Video AR playing for target " + sample.targetIndex + ". Sound button is always visible.");
         } else {
-          hideSoundControl();
-
           await media.play();
 
           log("▶ Audio playing for target " + sample.targetIndex);
         }
       } catch (error) {
-        if (sample.type === "video") {
-          showSoundControl();
-          log("⚠️ Video is ready. Tap sound button if sound is needed.");
-        } else {
+        if (sample.type === "audio") {
           showAudioUnlock();
           log("⚠️ Audio autoplay blocked. Unlock required.");
+        } else {
+          log("⚠️ Video play issue. Tap sound/video button if needed.");
         }
       }
     };
@@ -818,7 +788,6 @@ function setupAnchors() {
         currentActiveIndex = null;
       }
 
-      hideSoundControl();
       hideAudioUnlock();
 
       setStatus("AR Scanner");
@@ -836,7 +805,6 @@ async function startAR() {
 
   try {
     hideAudioUnlock();
-    hideSoundControl();
 
     await stopARInstance();
 
@@ -900,6 +868,79 @@ async function startAR() {
 }
 
 async function enableSound() {
+  const button = document.getElementById("soundBtn");
+
+  if (button) {
+    button.textContent = "🔊 در حال فعال‌سازی...";
+  }
+
+  if (currentActiveIndex === null) {
+    log("No active target yet. Point the camera at a video target, then tap the sound button.");
+
+    if (button) {
+      button.textContent = "🔊 صدای ویدیو";
+    }
+
+    return;
+  }
+
+  const sample = SAMPLES[currentActiveIndex];
+  const media = mediaElements[currentActiveIndex];
+
+  if (!sample || !media) {
+    log("No media ready yet.");
+
+    if (button) {
+      button.textContent = "🔊 صدای ویدیو";
+    }
+
+    return;
+  }
+
+  if (sample.type !== "video") {
+    log("Active target is not a video target.");
+
+    if (button) {
+      button.textContent = "🔊 صدای ویدیو";
+    }
+
+    return;
+  }
+
+  try {
+    videoSoundEnabled = true;
+
+    media.muted = false;
+    media.volume = 1;
+
+    await media.play();
+
+    if (button) {
+      button.textContent = "✅ صدا فعال شد";
+    }
+
+    log("🔊 Video sound enabled for target " + sample.targetIndex);
+
+    setTimeout(() => {
+      if (button) {
+        button.textContent = "🔊 صدای ویدیو";
+      }
+    }, 1800);
+
+  } catch (error) {
+    const errorMessage = error && error.message ? error.message : String(error);
+
+    if (button) {
+      button.textContent = "🔊 دوباره بزنید";
+    }
+
+    log("❌ Sound play error:\n" + errorMessage);
+  }
+}
+
+async function enableAudioUnlock() {
+  hideAudioUnlock();
+
   if (currentActiveIndex === null) {
     log("No active target yet.");
     return;
@@ -909,31 +950,16 @@ async function enableSound() {
   const media = mediaElements[currentActiveIndex];
 
   if (!sample || !media) {
-    log("No media ready.");
+    log("No audio media ready.");
     return;
   }
 
   try {
-    if (sample.type === "video") {
-      videoSoundEnabled = true;
-
-      media.muted = false;
-      media.volume = 1;
-      await media.play();
-
-      hideSoundControl();
-
-      log("🔊 Video sound enabled for target " + sample.targetIndex);
-    } else {
-      await media.play();
-
-      hideAudioUnlock();
-
-      log("🔊 Audio enabled for target " + sample.targetIndex);
-    }
+    await media.play();
+    log("🔊 Audio enabled for target " + sample.targetIndex);
   } catch (error) {
     const errorMessage = error && error.message ? error.message : String(error);
-    log("❌ Sound play error:\n" + errorMessage);
+    log("❌ Audio unlock error:\n" + errorMessage);
   }
 }
 
@@ -942,7 +968,7 @@ function bindEvents() {
   const soundBtn = document.getElementById("soundBtn");
 
   if (audioUnlockBtn) {
-    audioUnlockBtn.addEventListener("click", enableSound);
+    audioUnlockBtn.addEventListener("click", enableAudioUnlock);
   }
 
   if (soundBtn) {

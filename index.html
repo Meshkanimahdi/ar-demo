@@ -48,14 +48,129 @@
   }
 
   .top-status {
-    display: none !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2147483000;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem 1rem;
+    text-align: center;
+    color: #fff;
+    font-size: .88rem;
+    font-weight: 600;
+    background: linear-gradient(to bottom, rgba(0,0,0,.72), transparent);
+    pointer-events: none;
+  }
+
+  .pulse {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-left: 6px;
+    animation: pulseAnim 1.3s ease-in-out infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes pulseAnim {
+    0%, 100% {
+      opacity: .35;
+      transform: scale(.75);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.25);
+    }
   }
 
   .scan-overlay {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    position: fixed;
+    inset: 0;
+    z-index: 2147482500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .scan-box {
+    width: 230px;
+    height: 230px;
+    position: relative;
+  }
+
+  .scan-box::before,
+  .scan-box::after,
+  .scan-box .bl,
+  .scan-box .br {
+    content: "";
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border-color: var(--accent);
+    border-style: solid;
+  }
+
+  .scan-box::before {
+    top: 0;
+    left: 0;
+    border-width: 3px 0 0 3px;
+    border-radius: 6px 0 0 0;
+  }
+
+  .scan-box::after {
+    top: 0;
+    right: 0;
+    border-width: 3px 3px 0 0;
+    border-radius: 0 6px 0 0;
+  }
+
+  .scan-box .bl {
+    bottom: 0;
+    left: 0;
+    border-width: 0 0 3px 3px;
+    border-radius: 0 0 0 6px;
+  }
+
+  .scan-box .br {
+    bottom: 0;
+    right: 0;
+    border-width: 0 3px 3px 0;
+    border-radius: 0 0 6px 0;
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    top: 20px;
+    background: linear-gradient(to right, transparent, var(--accent), transparent);
+    animation: scanAnim 2s ease-in-out infinite;
+  }
+
+  @keyframes scanAnim {
+    0%, 100% {
+      top: 18px;
+      opacity: .45;
+    }
+
+    50% {
+      top: calc(100% - 20px);
+      opacity: 1;
+    }
+  }
+
+  .scan-label {
+    margin-top: 1rem;
+    color: rgba(255,255,255,.86);
+    font-size: .82rem;
+    text-align: center;
+    line-height: 1.8;
+    padding: 0 1rem;
   }
 
   .sound-control {
@@ -136,7 +251,31 @@
   }
 
   #debug {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2147482000;
+    padding: 8px 12px;
+    background: rgba(0,0,0,.72);
+    color: #4ade80;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    direction: ltr;
+    text-align: left;
+    pointer-events: none;
+  }
+
+  /* فقط حذف المان‌های نمایشی مزاحم؛ منطق AR دست نخورده */
+  .top-status,
+  .scan-overlay,
+  #debug {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 </style>
 </head>
@@ -147,9 +286,22 @@
 
   <div id="mindar-container"></div>
 
-  <div class="top-status" id="topStatus"></div>
+  <div class="top-status" id="topStatus">
+    AR Scanner <span class="pulse"></span>
+  </div>
 
-  <div class="scan-overlay" id="scanOverlay"></div>
+  <div class="scan-overlay" id="scanOverlay">
+    <div class="scan-box">
+      <div class="bl"></div>
+      <div class="br"></div>
+      <div class="scan-line"></div>
+    </div>
+
+    <div class="scan-label" id="scanLabel">
+      در حال راه‌اندازی دوربین...<br>
+      هرکدام از سه تصویر را جلوی دوربین بگیرید.
+    </div>
+  </div>
 
   <div class="sound-control" id="soundControl">
     <button id="soundBtn" type="button">🔊 صدای ویدیو</button>
@@ -162,7 +314,7 @@
     <button id="audioUnlockBtn" type="button">فعال‌سازی صدا</button>
   </div>
 
-  <div id="debug">Ready</div>
+  <div id="debug">در حال آماده‌سازی...</div>
 
 </div>
 
@@ -220,28 +372,33 @@ const mediaElements = [];
 const targetAspects = [];
 
 function log(message) {
-  console.log(message);
-
   const debugBox = document.getElementById("debug");
 
   if (debugBox) {
     debugBox.textContent = message;
   }
+
+  console.log(message);
 }
 
 function setStatus(message) {
   const topStatus = document.getElementById("topStatus");
 
   if (topStatus) {
-    topStatus.textContent = message;
+    topStatus.innerHTML = message + ' <span class="pulse"></span>';
   }
 }
 
-function showScanOverlay() {
+function showScanOverlay(message = null) {
   const scanOverlay = document.getElementById("scanOverlay");
+  const scanLabel = document.getElementById("scanLabel");
 
   if (scanOverlay) {
-    scanOverlay.style.display = "none";
+    scanOverlay.style.display = "flex";
+  }
+
+  if (message && scanLabel) {
+    scanLabel.innerHTML = message;
   }
 }
 
@@ -255,18 +412,12 @@ function hideScanOverlay() {
 
 function showAudioUnlock() {
   const box = document.getElementById("audioUnlock");
-
-  if (box) {
-    box.classList.add("active");
-  }
+  if (box) box.classList.add("active");
 }
 
 function hideAudioUnlock() {
   const box = document.getElementById("audioUnlock");
-
-  if (box) {
-    box.classList.remove("active");
-  }
+  if (box) box.classList.remove("active");
 }
 
 function loadImageAspect(src) {
@@ -497,7 +648,7 @@ function createAudioARMesh(sampleIndex) {
 
   const audio = createAudioElement(sample.mediaUrl);
   audio.addEventListener("error", () => {
-    log("Audio error for target " + sample.targetIndex);
+    log("❌ Audio error for target " + sample.targetIndex);
   });
 
   mediaElements[sampleIndex] = audio;
@@ -542,7 +693,7 @@ function createVideoARMesh(sampleIndex, videoElement) {
   arMeshes[sampleIndex] = mesh;
 
   log(
-    "Video mesh ready for target " + sample.targetIndex + "\n" +
+    "✅ Video mesh ready for target " + sample.targetIndex + "\n" +
     "target aspect: " + targetAspect.toFixed(4) + "\n" +
     "video aspect: " + videoAspect.toFixed(4)
   );
@@ -583,11 +734,11 @@ function setupAnchors() {
         const mesh = createVideoARMesh(sampleIndex, video);
         anchor.group.add(mesh);
 
-        log("Video attached to target " + sample.targetIndex);
+        log("✅ Video attached to target " + sample.targetIndex);
       });
 
       video.addEventListener("error", () => {
-        log("Video error for target " + sample.targetIndex + ". Check H.264 + AAC.");
+        log("❌ Video error for target " + sample.targetIndex + ". Check H.264 + AAC.");
       });
 
       video.load();
@@ -604,7 +755,7 @@ function setupAnchors() {
 
       const media = mediaElements[sampleIndex];
 
-      log("Target " + sample.targetIndex + " found: " + sample.label);
+      log("✅ Target " + sample.targetIndex + " found: " + sample.label);
 
       if (!media) {
         log("Media not ready yet.");
@@ -618,18 +769,18 @@ function setupAnchors() {
 
           await media.play();
 
-          log("Video AR playing for target " + sample.targetIndex);
+          log("▶ Video AR playing for target " + sample.targetIndex + ". Sound button is always visible.");
         } else {
           await media.play();
 
-          log("Audio playing for target " + sample.targetIndex);
+          log("▶ Audio playing for target " + sample.targetIndex);
         }
       } catch (error) {
         if (sample.type === "audio") {
           showAudioUnlock();
-          log("Audio autoplay blocked. Unlock required.");
+          log("⚠️ Audio autoplay blocked. Unlock required.");
         } else {
-          log("Video play issue. Tap sound/video button if needed.");
+          log("⚠️ Video play issue. Tap sound/video button if needed.");
         }
       }
     };
@@ -650,6 +801,7 @@ function setupAnchors() {
       hideAudioUnlock();
 
       setStatus("AR Scanner");
+      showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
 
       log("Target " + sample.targetIndex + " lost.");
     };
@@ -665,6 +817,8 @@ async function startAR() {
     hideAudioUnlock();
 
     await stopARInstance();
+
+    showScanOverlay("در حال آماده‌سازی AR...<br>لطفاً چند لحظه صبر کنید.");
 
     await prepareAllTargets();
 
@@ -691,9 +845,13 @@ async function startAR() {
 
     log("Starting camera...");
 
+    showScanOverlay("در حال درخواست دسترسی دوربین...");
+
     await mindarInstance.start();
 
-    log("Camera is active. Show any of the 3 target images.");
+    showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
+
+    log("✅ Camera is active. Show any of the 3 target images.");
 
     renderer.setAnimationLoop(() => {
       const audioMesh = arMeshes[0];
@@ -712,7 +870,8 @@ async function startAR() {
 
     const errorMessage = error && error.message ? error.message : String(error);
 
-    log("Camera / AR start error:\n" + errorMessage);
+    showScanOverlay("خطا در راه‌اندازی دوربین یا AR.<br>لطفاً دسترسی دوربین را بررسی کنید.");
+    log("❌ Camera / AR start error:\n" + errorMessage);
   } finally {
     isStarting = false;
   }
@@ -770,7 +929,7 @@ async function enableSound() {
       button.textContent = "✅ صدا فعال شد";
     }
 
-    log("Video sound enabled for target " + sample.targetIndex);
+    log("🔊 Video sound enabled for target " + sample.targetIndex);
 
     setTimeout(() => {
       if (button) {
@@ -785,7 +944,7 @@ async function enableSound() {
       button.textContent = "🔊 دوباره بزنید";
     }
 
-    log("Sound play error:\n" + errorMessage);
+    log("❌ Sound play error:\n" + errorMessage);
   }
 }
 
@@ -807,10 +966,10 @@ async function enableAudioUnlock() {
 
   try {
     await media.play();
-    log("Audio enabled for target " + sample.targetIndex);
+    log("🔊 Audio enabled for target " + sample.targetIndex);
   } catch (error) {
     const errorMessage = error && error.message ? error.message : String(error);
-    log("Audio unlock error:\n" + errorMessage);
+    log("❌ Audio unlock error:\n" + errorMessage);
   }
 }
 
@@ -826,7 +985,7 @@ function bindEvents() {
     soundBtn.addEventListener("click", enableSound);
   }
 
-  log("App loaded. Auto-starting AR now...");
+  log("✅ App loaded. Auto-starting AR now...");
 }
 
 bindEvents();

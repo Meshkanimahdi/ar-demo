@@ -189,49 +189,54 @@
     pointer-events: none;
   }
 
-  .audio-unlock {
+  .audio-unlock,
+  .camera-start {
     position: absolute;
     left: 50%;
     top: 50%;
     z-index: 1000;
     transform: translate(-50%, -50%);
     display: none;
-    width: min(86vw, 360px);
+    width: min(86vw, 380px);
     padding: 1.2rem;
     border-radius: 24px;
     border: 1px solid rgba(108,99,255,.35);
-    background: rgba(10,10,15,.9);
+    background: rgba(10,10,15,.92);
     box-shadow: 0 20px 60px rgba(0,0,0,.45);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     text-align: center;
   }
 
-  .audio-unlock.active {
+  .audio-unlock.active,
+  .camera-start.active {
     display: block;
   }
 
-  .audio-unlock p {
+  .audio-unlock p,
+  .camera-start p {
     color: rgba(255,255,255,.84);
     font-size: .9rem;
     line-height: 1.8;
     margin-bottom: .9rem;
   }
 
-  .audio-unlock button {
+  .audio-unlock button,
+  .camera-start button {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     color: #fff;
     border: none;
     border-radius: 999px;
-    padding: .85rem 1.4rem;
-    font-size: .95rem;
+    padding: .9rem 1.5rem;
+    font-size: .96rem;
     font-weight: 700;
     cursor: pointer;
-    min-width: 170px;
+    min-width: 180px;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .audio-unlock button:active {
+  .audio-unlock button:active,
+  .camera-start button:active {
     transform: scale(.97);
   }
 </style>
@@ -258,6 +263,13 @@
       در حال راه‌اندازی دوربین...<br>
       هرکدام از سه تصویر را جلوی دوربین بگیرید.
     </div>
+  </div>
+
+  <div class="camera-start" id="cameraStart">
+    <p>
+      اگر دوربین به‌صورت خودکار باز نشد، برای شروع AR روی دکمه زیر بزنید.
+    </p>
+    <button id="cameraStartBtn" type="button">شروع دوربین</button>
   </div>
 
   <div class="audio-unlock" id="audioUnlock">
@@ -316,6 +328,8 @@ const SAMPLES = [
 let mindarInstance = null;
 let currentActiveIndex = null;
 let isStarting = false;
+let cameraStarted = false;
+let startAttempted = false;
 
 const anchors = [];
 const arMeshes = [];
@@ -369,6 +383,16 @@ function showAudioUnlock() {
 
 function hideAudioUnlock() {
   const box = document.getElementById("audioUnlock");
+  if (box) box.classList.remove("active");
+}
+
+function showCameraStart() {
+  const box = document.getElementById("cameraStart");
+  if (box && !cameraStarted) box.classList.add("active");
+}
+
+function hideCameraStart() {
+  const box = document.getElementById("cameraStart");
   if (box) box.classList.remove("active");
 }
 
@@ -751,14 +775,18 @@ function setupAnchors() {
 }
 
 async function startAR() {
-  if (isStarting) return;
+  if (isStarting || cameraStarted) return;
 
   isStarting = true;
+  startAttempted = true;
 
   try {
+    hideCameraStart();
+    hideAudioUnlock();
+
     await stopARInstance();
 
-    showScanOverlay("در حال راه‌اندازی دوربین...<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
+    showScanOverlay("در حال آماده‌سازی AR...<br>لطفاً چند لحظه صبر کنید.");
 
     await prepareAllTargets();
 
@@ -785,7 +813,12 @@ async function startAR() {
 
     log("Starting camera...");
 
+    showScanOverlay("در حال درخواست دسترسی دوربین...");
+
     await mindarInstance.start();
+
+    cameraStarted = true;
+    hideCameraStart();
 
     showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
     log("✅ Camera is active. Show any of the 3 target images.");
@@ -807,8 +840,10 @@ async function startAR() {
 
     const errorMessage = error && error.message ? error.message : String(error);
 
-    showScanOverlay("خطا در راه‌اندازی AR");
-    log("❌ Error:\n" + errorMessage);
+    showScanOverlay("دوربین به‌صورت خودکار باز نشد.<br>برای شروع، دکمه شروع دوربین را بزنید.");
+    showCameraStart();
+
+    log("❌ Camera / AR start error:\n" + errorMessage);
   } finally {
     isStarting = false;
   }
@@ -847,19 +882,42 @@ async function enableSound() {
 
 function bindEvents() {
   const audioUnlockBtn = document.getElementById("audioUnlockBtn");
+  const cameraStartBtn = document.getElementById("cameraStartBtn");
 
   if (audioUnlockBtn) {
     audioUnlockBtn.addEventListener("click", enableSound);
   }
 
-  log("✅ App loaded. Starting AR automatically...");
+  if (cameraStartBtn) {
+    cameraStartBtn.addEventListener("click", () => {
+      cameraStarted = false;
+      startAR();
+    });
+  }
+
+  log("✅ App loaded. Auto-starting AR now...");
 }
 
 bindEvents();
 
-window.addEventListener("load", () => {
+/*
+  مهم‌ترین اصلاح:
+  به جای اینکه منتظر window.load بمانیم، مستقیم اجرا می‌کنیم.
+  چون module-shim ممکن است بعد از load اجرا شود و event از دست برود.
+*/
+setTimeout(() => {
   startAR();
-});
+}, 300);
+
+/*
+  اگر مرورگر هنوز اجازه auto-start نداد، بعد از چند ثانیه دکمه شروع را نشان بده.
+*/
+setTimeout(() => {
+  if (!cameraStarted) {
+    showCameraStart();
+    log("⚠️ Camera did not start automatically. Manual start button shown.");
+  }
+}, 4500);
 </script>
 
 </body>

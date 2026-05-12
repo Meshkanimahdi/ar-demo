@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fa">
 <head>
@@ -266,16 +267,6 @@
     direction: ltr;
     text-align: left;
     pointer-events: none;
-  }
-
-  /* فقط مخفی‌سازی UI؛ هیچ منطق AR تغییر نکرده */
-  .top-status,
-  .scan-overlay,
-  #debug {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
   }
 </style>
 </head>
@@ -801,7 +792,7 @@ function setupAnchors() {
       hideAudioUnlock();
 
       setStatus("AR Scanner");
-      showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
+      showScanOverlay(".");
 
       log("Target " + sample.targetIndex + " lost.");
     };
@@ -849,7 +840,7 @@ async function startAR() {
 
     await mindarInstance.start();
 
-    showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
+    showScanOverlay(".");
 
     log("✅ Camera is active. Show any of the 3 target images.");
 

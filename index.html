@@ -177,9 +177,9 @@
 </div>
 
 <!-- THREE.js اول -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
 <!-- بعد MindAR -->
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
 
 <script>
 const SAMPLES = [
@@ -238,7 +238,7 @@ async function startAR(index) {
 
     log('در حال خواندن فایل target: ' + currentSample.mindFile);
 
-    const MindARThree = window.MINDAR.IMAGE.MindARThree;
+    const MindARThree = window.MINDAR.IMAGE.MindARThree || window.MindARThree;
 
     mindarInstance = new MindARThree({
       container: document.getElementById('mindar-container'),

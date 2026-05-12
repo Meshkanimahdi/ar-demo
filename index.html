@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>AR Demo</title>
+<title>AR Demo Final</title>
 
 <style>
   * {
@@ -171,33 +171,50 @@
     padding: 0 1rem;
   }
 
-  #debug {
+  .sound-control {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 999;
-    padding: 8px 12px;
-    background: rgba(0,0,0,.72);
-    color: #4ade80;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 11px;
-    line-height: 1.55;
-    white-space: pre-wrap;
-    direction: ltr;
-    text-align: left;
-    pointer-events: none;
+    left: 50%;
+    bottom: max(72px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    pointer-events: auto;
   }
 
-  .audio-unlock,
-  .camera-start {
+  .sound-control.active {
+    display: flex;
+  }
+
+  .sound-control button {
+    background: rgba(10,10,15,.86);
+    color: #fff;
+    border: 1px solid rgba(108,99,255,.38);
+    border-radius: 999px;
+    padding: .78rem 1.2rem;
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 14px 40px rgba(0,0,0,.32);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .sound-control button:active {
+    transform: scale(.96);
+  }
+
+  .audio-unlock {
     position: absolute;
     left: 50%;
     top: 50%;
     z-index: 1000;
     transform: translate(-50%, -50%);
     display: none;
-    width: min(86vw, 380px);
+    width: min(86vw, 360px);
     padding: 1.2rem;
     border-radius: 24px;
     border: 1px solid rgba(108,99,255,.35);
@@ -208,21 +225,18 @@
     text-align: center;
   }
 
-  .audio-unlock.active,
-  .camera-start.active {
+  .audio-unlock.active {
     display: block;
   }
 
-  .audio-unlock p,
-  .camera-start p {
+  .audio-unlock p {
     color: rgba(255,255,255,.84);
     font-size: .9rem;
     line-height: 1.8;
     margin-bottom: .9rem;
   }
 
-  .audio-unlock button,
-  .camera-start button {
+  .audio-unlock button {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     color: #fff;
     border: none;
@@ -235,9 +249,26 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .audio-unlock button:active,
-  .camera-start button:active {
+  .audio-unlock button:active {
     transform: scale(.97);
+  }
+
+  #debug {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 998;
+    padding: 8px 12px;
+    background: rgba(0,0,0,.72);
+    color: #4ade80;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    direction: ltr;
+    text-align: left;
+    pointer-events: none;
   }
 </style>
 </head>
@@ -265,11 +296,8 @@
     </div>
   </div>
 
-  <div class="camera-start" id="cameraStart">
-    <p>
-      اگر دوربین به‌صورت خودکار باز نشد، برای شروع AR روی دکمه زیر بزنید.
-    </p>
-    <button id="cameraStartBtn" type="button">شروع دوربین</button>
+  <div class="sound-control" id="soundControl">
+    <button id="soundBtn" type="button">🔊 فعال‌سازی صدا</button>
   </div>
 
   <div class="audio-unlock" id="audioUnlock">
@@ -328,8 +356,6 @@ const SAMPLES = [
 let mindarInstance = null;
 let currentActiveIndex = null;
 let isStarting = false;
-let cameraStarted = false;
-let startAttempted = false;
 
 const anchors = [];
 const arMeshes = [];
@@ -376,6 +402,16 @@ function hideScanOverlay() {
   }
 }
 
+function showSoundControl() {
+  const soundControl = document.getElementById("soundControl");
+  if (soundControl) soundControl.classList.add("active");
+}
+
+function hideSoundControl() {
+  const soundControl = document.getElementById("soundControl");
+  if (soundControl) soundControl.classList.remove("active");
+}
+
 function showAudioUnlock() {
   const box = document.getElementById("audioUnlock");
   if (box) box.classList.add("active");
@@ -383,16 +419,6 @@ function showAudioUnlock() {
 
 function hideAudioUnlock() {
   const box = document.getElementById("audioUnlock");
-  if (box) box.classList.remove("active");
-}
-
-function showCameraStart() {
-  const box = document.getElementById("cameraStart");
-  if (box && !cameraStarted) box.classList.add("active");
-}
-
-function hideCameraStart() {
-  const box = document.getElementById("cameraStart");
   if (box) box.classList.remove("active");
 }
 
@@ -494,6 +520,7 @@ function clearARContent() {
 
   currentActiveIndex = null;
   hideAudioUnlock();
+  hideSoundControl();
 }
 
 async function stopARInstance() {
@@ -729,9 +756,9 @@ function setupAnchors() {
       setStatus(sample.label);
       stopAllMediaExcept(sampleIndex);
 
-      log("✅ Target " + sample.targetIndex + " found: " + sample.label);
-
       const media = mediaElements[sampleIndex];
+
+      log("✅ Target " + sample.targetIndex + " found: " + sample.label);
 
       if (!media) {
         log("Media not ready yet.");
@@ -742,14 +769,25 @@ function setupAnchors() {
         if (sample.type === "video") {
           media.muted = true;
           await media.play();
-          log("▶ Video AR playing on target " + sample.targetIndex);
+
+          showSoundControl();
+
+          log("▶ Video AR playing muted on target " + sample.targetIndex + ". Tap sound button.");
         } else {
+          hideSoundControl();
+
           await media.play();
+
           log("▶ Audio playing for target " + sample.targetIndex);
         }
       } catch (error) {
-        log("⚠️ Autoplay blocked. Audio unlock required.");
-        showAudioUnlock();
+        if (sample.type === "video") {
+          showSoundControl();
+          log("⚠️ Video audio requires tap. Sound button shown.");
+        } else {
+          showAudioUnlock();
+          log("⚠️ Audio autoplay blocked. Unlock required.");
+        }
       }
     };
 
@@ -766,6 +804,9 @@ function setupAnchors() {
         currentActiveIndex = null;
       }
 
+      hideSoundControl();
+      hideAudioUnlock();
+
       setStatus("AR Scanner");
       showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
 
@@ -775,14 +816,13 @@ function setupAnchors() {
 }
 
 async function startAR() {
-  if (isStarting || cameraStarted) return;
+  if (isStarting) return;
 
   isStarting = true;
-  startAttempted = true;
 
   try {
-    hideCameraStart();
     hideAudioUnlock();
+    hideSoundControl();
 
     await stopARInstance();
 
@@ -817,10 +857,8 @@ async function startAR() {
 
     await mindarInstance.start();
 
-    cameraStarted = true;
-    hideCameraStart();
-
     showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
+
     log("✅ Camera is active. Show any of the 3 target images.");
 
     renderer.setAnimationLoop(() => {
@@ -840,9 +878,7 @@ async function startAR() {
 
     const errorMessage = error && error.message ? error.message : String(error);
 
-    showScanOverlay("دوربین به‌صورت خودکار باز نشد.<br>برای شروع، دکمه شروع دوربین را بزنید.");
-    showCameraStart();
-
+    showScanOverlay("خطا در راه‌اندازی دوربین یا AR.<br>لطفاً دسترسی دوربین را بررسی کنید.");
     log("❌ Camera / AR start error:\n" + errorMessage);
   } finally {
     isStarting = false;
@@ -869,9 +905,13 @@ async function enableSound() {
     if (sample.type === "video") {
       media.muted = false;
       await media.play();
+
+      hideSoundControl();
+
       log("🔊 Video sound enabled for target " + sample.targetIndex);
     } else {
       await media.play();
+
       log("🔊 Audio enabled for target " + sample.targetIndex);
     }
   } catch (error) {
@@ -882,17 +922,14 @@ async function enableSound() {
 
 function bindEvents() {
   const audioUnlockBtn = document.getElementById("audioUnlockBtn");
-  const cameraStartBtn = document.getElementById("cameraStartBtn");
+  const soundBtn = document.getElementById("soundBtn");
 
   if (audioUnlockBtn) {
     audioUnlockBtn.addEventListener("click", enableSound);
   }
 
-  if (cameraStartBtn) {
-    cameraStartBtn.addEventListener("click", () => {
-      cameraStarted = false;
-      startAR();
-    });
+  if (soundBtn) {
+    soundBtn.addEventListener("click", enableSound);
   }
 
   log("✅ App loaded. Auto-starting AR now...");
@@ -900,24 +937,9 @@ function bindEvents() {
 
 bindEvents();
 
-/*
-  مهم‌ترین اصلاح:
-  به جای اینکه منتظر window.load بمانیم، مستقیم اجرا می‌کنیم.
-  چون module-shim ممکن است بعد از load اجرا شود و event از دست برود.
-*/
 setTimeout(() => {
   startAR();
 }, 300);
-
-/*
-  اگر مرورگر هنوز اجازه auto-start نداد، بعد از چند ثانیه دکمه شروع را نشان بده.
-*/
-setTimeout(() => {
-  if (!cameraStarted) {
-    showCameraStart();
-    log("⚠️ Camera did not start automatically. Manual start button shown.");
-  }
-}, 4500);
 </script>
 
 </body>

@@ -6,356 +6,360 @@
 <title>AR Demo</title>
 
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
   :root {
-    --bg:#0a0a0f;
-    --surface:#13131a;
-    --accent:#6c63ff;
-    --accent2:#ff6584;
-    --text:#f0eeff;
-    --muted:#8887a0;
-    --border:rgba(108,99,255,0.2);
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --text: #f0eeff;
+    --muted: #8887a0;
+    --border: rgba(108, 99, 255, 0.2);
   }
 
   body {
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Segoe UI',system-ui,sans-serif;
-    min-height:100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
   }
 
   .header {
-    text-align:center;
-    padding:2rem 1rem 1rem;
+    text-align: center;
+    padding: 2rem 1rem 1rem;
   }
 
   .header::after {
-    content:'';
-    display:block;
-    width:60px;
-    height:2px;
-    background:var(--accent);
-    margin:.75rem auto 0;
-    border-radius:2px;
+    content: '';
+    display: block;
+    width: 60px;
+    height: 2px;
+    background: var(--accent);
+    margin: .75rem auto 0;
+    border-radius: 2px;
   }
 
   .header h1 {
-    font-size:1.4rem;
-    font-weight:700;
-    letter-spacing:.05em;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: .05em;
   }
 
   .header p {
-    font-size:.78rem;
-    color:var(--muted);
-    margin-top:.3rem;
-    letter-spacing:.08em;
-    text-transform:uppercase;
+    font-size: .78rem;
+    color: var(--muted);
+    margin-top: .3rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
   }
 
   .grid {
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    padding:1.5rem 1rem;
-    max-width:480px;
-    margin:0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 1.5rem 1rem;
+    max-width: 480px;
+    margin: 0 auto;
   }
 
   .btn {
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:1.2rem 1.5rem;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:1rem;
-    transition:transform .15s,border-color .2s;
-    -webkit-tap-highlight-color:transparent;
-    width:100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform .15s, border-color .2s;
+    -webkit-tap-highlight-color: transparent;
+    width: 100%;
   }
 
   .btn:active {
-    transform:scale(0.97);
-    border-color:var(--accent);
+    transform: scale(0.97);
+    border-color: var(--accent);
   }
 
   .btn .icon {
-    font-size:2rem;
-    flex-shrink:0;
+    font-size: 2rem;
+    flex-shrink: 0;
   }
 
   .btn .label {
-    font-size:1rem;
-    font-weight:600;
-    color:var(--text);
-    display:block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
   }
 
   .btn .badge {
-    display:inline-block;
-    margin-top:.3rem;
-    font-size:.65rem;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    padding:2px 8px;
-    border-radius:20px;
-    background:rgba(108,99,255,0.15);
-    color:var(--accent);
-    border:1px solid rgba(108,99,255,0.3);
+    display: inline-block;
+    margin-top: .3rem;
+    font-size: .65rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(108, 99, 255, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(108, 99, 255, 0.3);
   }
 
   .btn.audio .badge {
-    background:rgba(255,101,132,0.12);
-    color:var(--accent2);
-    border-color:rgba(255,101,132,0.3);
+    background: rgba(255, 101, 132, 0.12);
+    color: var(--accent2);
+    border-color: rgba(255, 101, 132, 0.3);
   }
 
   .hint {
-    text-align:center;
-    font-size:.72rem;
-    color:var(--muted);
-    padding:0 1rem 2rem;
-    max-width:480px;
-    margin:0 auto;
-    line-height:1.7;
+    text-align: center;
+    font-size: .72rem;
+    color: var(--muted);
+    padding: 0 1rem 2rem;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
   }
 
   .modal {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:#000;
-    z-index:200;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 200;
   }
 
   .modal.active {
-    display:block;
+    display: block;
   }
 
   #mindar-container {
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
 
   .modal-bar {
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
-    z-index:999;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:max(1rem,env(safe-area-inset-top)) 1.25rem 1rem;
-    background:linear-gradient(to bottom,rgba(0,0,0,0.75),transparent);
-    pointer-events:none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(1rem, env(safe-area-inset-top)) 1.25rem 1rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
+    pointer-events: none;
   }
 
   .modal-bar button {
-    pointer-events:all;
+    pointer-events: all;
   }
 
   .modal-title {
-    font-size:.95rem;
-    font-weight:600;
-    color:#fff;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #fff;
   }
 
   .close-btn {
-    background:rgba(255,255,255,0.15);
-    border:1px solid rgba(255,255,255,0.2);
-    color:#fff;
-    border-radius:50%;
-    width:40px;
-    height:40px;
-    font-size:1.2rem;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    -webkit-tap-highlight-color:transparent;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
   }
 
   #debug {
-    position:absolute;
-    bottom:0;
-    left:0;
-    right:0;
-    z-index:999;
-    background:rgba(0,0,0,0.75);
-    color:#4ade80;
-    font-size:12px;
-    font-family:monospace;
-    padding:8px 12px;
-    line-height:1.6;
-    pointer-events:none;
-    direction:ltr;
-    text-align:left;
-    white-space:pre-wrap;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: rgba(0,0,0,0.75);
+    color: #4ade80;
+    font-size: 12px;
+    font-family: monospace;
+    padding: 8px 12px;
+    line-height: 1.6;
+    pointer-events: none;
+    direction: ltr;
+    text-align: left;
+    white-space: pre-wrap;
   }
 
   .scan-overlay {
-    position:absolute;
-    inset:0;
-    z-index:500;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    pointer-events:none;
+    position: absolute;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
   }
 
   .scan-box {
-    width:220px;
-    height:220px;
-    position:relative;
+    width: 220px;
+    height: 220px;
+    position: relative;
   }
 
   .scan-box::before,
   .scan-box::after,
   .scan-box .bl,
   .scan-box .br {
-    content:'';
-    position:absolute;
-    width:32px;
-    height:32px;
-    border-color:var(--accent);
-    border-style:solid;
+    content: '';
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-color: var(--accent);
+    border-style: solid;
   }
 
   .scan-box::before {
-    top:0;
-    left:0;
-    border-width:3px 0 0 3px;
-    border-radius:5px 0 0 0;
+    top: 0;
+    left: 0;
+    border-width: 3px 0 0 3px;
+    border-radius: 5px 0 0 0;
   }
 
   .scan-box::after {
-    top:0;
-    right:0;
-    border-width:3px 3px 0 0;
-    border-radius:0 5px 0 0;
+    top: 0;
+    right: 0;
+    border-width: 3px 3px 0 0;
+    border-radius: 0 5px 0 0;
   }
 
   .scan-box .bl {
-    bottom:0;
-    left:0;
-    border-width:0 0 3px 3px;
-    border-radius:0 0 0 5px;
+    bottom: 0;
+    left: 0;
+    border-width: 0 0 3px 3px;
+    border-radius: 0 0 0 5px;
   }
 
   .scan-box .br {
-    bottom:0;
-    right:0;
-    border-width:0 3px 3px 0;
-    border-radius:0 0 5px 0;
+    bottom: 0;
+    right: 0;
+    border-width: 0 3px 3px 0;
+    border-radius: 0 0 5px 0;
   }
 
   .scan-line {
-    position:absolute;
-    left:8px;
-    right:8px;
-    height:2px;
-    background:linear-gradient(to right,transparent,var(--accent),transparent);
-    animation:scanAnim 2s ease-in-out infinite;
-    top:20px;
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--accent), transparent);
+    animation: scanAnim 2s ease-in-out infinite;
+    top: 20px;
   }
 
   @keyframes scanAnim {
-    0%,100% {
-      top:18px;
-      opacity:.5;
+    0%, 100% {
+      top: 18px;
+      opacity: .5;
     }
 
     50% {
-      top:calc(100% - 20px);
-      opacity:1;
+      top: calc(100% - 20px);
+      opacity: 1;
     }
   }
 
   .scan-label {
-    margin-top:1rem;
-    font-size:.8rem;
-    color:rgba(255,255,255,.8);
-    letter-spacing:.05em;
-    text-align:center;
+    margin-top: 1rem;
+    font-size: .8rem;
+    color: rgba(255,255,255,.8);
+    letter-spacing: .05em;
+    text-align: center;
   }
 
   .player-overlay {
-    display:none;
-    position:absolute;
-    inset:0;
-    background:rgba(0,0,0,.93);
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:1.5rem;
-    z-index:600;
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.93);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 600;
   }
 
   .player-overlay.active {
-    display:flex;
+    display: flex;
   }
 
   .player-overlay video {
-    width:100%;
-    max-width:480px;
-    border-radius:12px;
-    background:#000;
-    outline:none;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 12px;
+    background: #000;
+    outline: none;
   }
 
   .player-overlay audio {
-    width:100%;
-    max-width:480px;
-    margin-top:1rem;
-    outline:none;
+    width: 100%;
+    max-width: 480px;
+    margin-top: 1rem;
+    outline: none;
   }
 
   .player-label {
-    font-size:.85rem;
-    color:var(--muted);
-    margin-bottom:.75rem;
+    font-size: .85rem;
+    color: var(--muted);
+    margin-bottom: .75rem;
   }
 
   .rescan-btn {
-    margin-top:1.25rem;
-    background:var(--surface);
-    border:1px solid var(--border);
-    color:var(--text);
-    border-radius:12px;
-    padding:.75rem 1.5rem;
-    font-size:.85rem;
-    cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
+    margin-top: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: .75rem 1.5rem;
+    font-size: .85rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .pulse {
-    display:inline-block;
-    width:7px;
-    height:7px;
-    border-radius:50%;
-    background:var(--accent);
-    margin-left:5px;
-    animation:p 1.4s ease-in-out infinite;
-    vertical-align:middle;
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-left: 5px;
+    animation: pulseAnim 1.4s ease-in-out infinite;
+    vertical-align: middle;
   }
 
-  @keyframes p {
-    0%,100% {
-      opacity:.3;
-      transform:scale(.8);
+  @keyframes pulseAnim {
+    0%, 100% {
+      opacity: .3;
+      transform: scale(.8);
     }
 
     50% {
-      opacity:1;
-      transform:scale(1.2);
+      opacity: 1;
+      transform: scale(1.2);
     }
   }
 </style>
@@ -369,7 +373,8 @@
 </div>
 
 <div class="grid">
-  <button class="btn audio" onclick="startAR(0)">
+
+  <button class="btn audio" data-sample="0">
     <span class="icon">🎵</span>
     <div>
       <span class="label">Sample 1</span>
@@ -377,7 +382,7 @@
     </div>
   </button>
 
-  <button class="btn" onclick="startAR(1)">
+  <button class="btn" data-sample="1">
     <span class="icon">🎬</span>
     <div>
       <span class="label">Sample 2</span>
@@ -385,13 +390,14 @@
     </div>
   </button>
 
-  <button class="btn" onclick="startAR(2)">
+  <button class="btn" data-sample="2">
     <span class="icon">🎬</span>
     <div>
       <span class="label">Sample 3</span>
       <span class="badge">Video</span>
     </div>
   </button>
+
 </div>
 
 <p class="hint">
@@ -405,7 +411,7 @@
 
   <div class="modal-bar">
     <span class="modal-title" id="modal-title">Sample <span class="pulse"></span></span>
-    <button class="close-btn" onclick="closeAR()">✕</button>
+    <button class="close-btn" id="closeBtn">✕</button>
   </div>
 
   <div class="scan-overlay" id="scanOverlay">
@@ -424,17 +430,20 @@
     <video id="mediaVideo" controls playsinline webkit-playsinline style="display:none"></video>
     <audio id="mediaAudio" controls style="display:none"></audio>
 
-    <button class="rescan-btn" onclick="rescan()">🔄 اسکن مجدد</button>
+    <button class="rescan-btn" id="rescanBtn">🔄 اسکن مجدد</button>
   </div>
 
   <div id="debug">در حال آماده‌سازی...</div>
 
 </div>
 
+<script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
     "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
   }
 }
@@ -445,31 +454,22 @@ import { MindARThree } from "mindar-image-three";
 
 const SAMPLES = [
   {
-    label: 'Sample 1 — Audio',
-    type: 'audio',
-
-    // اگر فایل توی GitHub بدون پسوند است، این را به A01 برگردان.
-    mindFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A01.mind',
-
-    mediaUrl: 'https://drive.google.com/uc?export=download&id=1SW8ORQRZj-kY5dCpCI4p-Td7ZkLX1qZS'
+    label: "Sample 1 — Audio",
+    type: "audio",
+    mindFile: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A01.mind",
+    mediaUrl: "https://drive.google.com/uc?export=download&id=1SW8ORQRZj-kY5dCpCI4p-Td7ZkLX1qZS"
   },
   {
-    label: 'Sample 2 — Video',
-    type: 'video',
-
-    // اگر فایل توی GitHub بدون پسوند است، این را به A02 برگردان.
-    mindFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A02.mind',
-
-    mediaUrl: 'https://drive.google.com/uc?export=download&id=1xNzvWmXGkkqLtUWrrutCSWIsrnaWc32q'
+    label: "Sample 2 — Video",
+    type: "video",
+    mindFile: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A02.mind",
+    mediaUrl: "https://drive.google.com/uc?export=download&id=1xNzvWmXGkkqLtUWrrutCSWIsrnaWc32q"
   },
   {
-    label: 'Sample 3 — Video',
-    type: 'video',
-
-    // اگر فایل توی GitHub بدون پسوند است، این را به A03 برگردان.
-    mindFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A03.mind',
-
-    mediaUrl: 'https://drive.google.com/uc?export=download&id=1QkccEkQwgQ3NKK6QLHcHuLgMMMI0NFd9'
+    label: "Sample 3 — Video",
+    type: "video",
+    mindFile: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A03.mind",
+    mediaUrl: "https://drive.google.com/uc?export=download&id=1QkccEkQwgQ3NKK6QLHcHuLgMMMI0NFd9"
   }
 ];
 
@@ -477,86 +477,92 @@ let mindarInstance = null;
 let currentSample = null;
 let isStarting = false;
 
-function log(msg) {
-  const debugBox = document.getElementById('debug');
+function log(message) {
+  const debugBox = document.getElementById("debug");
 
   if (debugBox) {
-    debugBox.textContent = msg;
+    debugBox.textContent = message;
   }
 
-  console.log(msg);
+  console.log(message);
 }
 
 function resetMedia() {
-  const video = document.getElementById('mediaVideo');
-  const audio = document.getElementById('mediaAudio');
+  const video = document.getElementById("mediaVideo");
+  const audio = document.getElementById("mediaAudio");
 
-  video.pause();
-  audio.pause();
+  if (video) {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    video.style.display = "none";
+  }
 
-  video.removeAttribute('src');
-  audio.removeAttribute('src');
-
-  video.load();
-  audio.load();
-
-  video.style.display = 'none';
-  audio.style.display = 'none';
-}
-
-async function stopARInstance() {
-  if (mindarInstance) {
-    try {
-      mindarInstance.renderer.setAnimationLoop(null);
-    } catch (e) {}
-
-    try {
-      await mindarInstance.stop();
-    } catch (e) {
-      console.warn('MindAR stop warning:', e);
-    }
-
-    mindarInstance = null;
+  if (audio) {
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+    audio.style.display = "none";
   }
 }
 
-window.startAR = async function(index) {
+async function stopARInstance() {
+  if (!mindarInstance) return;
+
+  try {
+    if (mindarInstance.renderer) {
+      mindarInstance.renderer.setAnimationLoop(null);
+    }
+  } catch (error) {
+    console.warn("Renderer stop warning:", error);
+  }
+
+  try {
+    await mindarInstance.stop();
+  } catch (error) {
+    console.warn("MindAR stop warning:", error);
+  }
+
+  mindarInstance = null;
+}
+
+async function startAR(index) {
   if (isStarting) return;
 
   isStarting = true;
   currentSample = SAMPLES[index];
 
-  const modal = document.getElementById('modal');
-  const mindarContainer = document.getElementById('mindar-container');
-  const scanOverlay = document.getElementById('scanOverlay');
-  const scanLabel = document.getElementById('scanLabel');
-  const playerOverlay = document.getElementById('playerOverlay');
-  const modalTitle = document.getElementById('modal-title');
+  const modal = document.getElementById("modal");
+  const mindarContainer = document.getElementById("mindar-container");
+  const scanOverlay = document.getElementById("scanOverlay");
+  const scanLabel = document.getElementById("scanLabel");
+  const playerOverlay = document.getElementById("playerOverlay");
+  const modalTitle = document.getElementById("modal-title");
 
-  modal.classList.add('active');
+  modal.classList.add("active");
   modalTitle.innerHTML = `Sample ${index + 1} <span class="pulse"></span>`;
 
-  scanOverlay.style.display = 'flex';
-  scanLabel.textContent = 'در حال بارگذاری...';
-  playerOverlay.classList.remove('active');
+  scanOverlay.style.display = "flex";
+  scanLabel.textContent = "در حال بارگذاری...";
+  playerOverlay.classList.remove("active");
 
   resetMedia();
 
-  mindarContainer.innerHTML = '';
+  mindarContainer.innerHTML = "";
 
   try {
-    log('Stopping previous AR instance...');
+    log("Stopping previous AR instance...");
     await stopARInstance();
 
-    log('Loading target file:\n' + currentSample.mindFile);
+    log("Loading target file:\n" + currentSample.mindFile);
 
     mindarInstance = new MindARThree({
       container: mindarContainer,
       imageTargetSrc: currentSample.mindFile,
       maxTrack: 1,
-      uiLoading: 'no',
-      uiScanning: 'no',
-      uiError: 'no',
+      uiLoading: "no",
+      uiScanning: "no",
+      uiError: "no",
       filterMinCF: 0.001,
       filterBeta: 0.01,
       missTolerance: 5,
@@ -568,108 +574,126 @@ window.startAR = async function(index) {
     const anchor = mindarInstance.addAnchor(0);
 
     anchor.onTargetFound = () => {
-      log('✅ Target found');
+      log("✅ Target found");
       showMedia();
     };
 
     anchor.onTargetLost = () => {
-      log('Target lost');
+      log("Target lost");
     };
 
-    log('Starting camera...');
+    log("Starting camera...");
 
     await mindarInstance.start();
 
-    log('✅ Camera is active. Show the target image.');
-    scanLabel.textContent = 'تصویر را جلوی دوربین بگیرید';
+    log("✅ Camera is active. Show the target image.");
+    scanLabel.textContent = "تصویر را جلوی دوربین بگیرید";
 
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
 
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
 
-    log(
-      '❌ Error:\n' +
-      (err && err.message ? err.message : err)
-    );
+    const errorMessage = error && error.message ? error.message : String(error);
 
-    scanLabel.textContent = 'خطا در راه‌اندازی AR';
+    log("❌ Error:\n" + errorMessage);
+    scanLabel.textContent = "خطا در راه‌اندازی AR";
   } finally {
     isStarting = false;
   }
-};
+}
 
 function showMedia() {
-  const scanOverlay = document.getElementById('scanOverlay');
-  const playerOverlay = document.getElementById('playerOverlay');
-  const playerLabel = document.getElementById('playerLabel');
-  const video = document.getElementById('mediaVideo');
-  const audio = document.getElementById('mediaAudio');
+  const scanOverlay = document.getElementById("scanOverlay");
+  const playerOverlay = document.getElementById("playerOverlay");
+  const playerLabel = document.getElementById("playerLabel");
+  const video = document.getElementById("mediaVideo");
+  const audio = document.getElementById("mediaAudio");
 
-  scanOverlay.style.display = 'none';
-  playerOverlay.classList.add('active');
+  scanOverlay.style.display = "none";
+  playerOverlay.classList.add("active");
   playerLabel.textContent = currentSample.label;
 
-  if (currentSample.type === 'video') {
+  if (currentSample.type === "video") {
     audio.pause();
-    audio.style.display = 'none';
+    audio.style.display = "none";
 
     video.src = currentSample.mediaUrl;
-    video.style.display = 'block';
+    video.style.display = "block";
     video.load();
 
     video.play().catch(error => {
-      log('Video play blocked or failed:\n' + error.message);
+      log("Video play blocked or failed:\n" + error.message);
     });
   } else {
     video.pause();
-    video.style.display = 'none';
+    video.style.display = "none";
 
     audio.src = currentSample.mediaUrl;
-    audio.style.display = 'block';
+    audio.style.display = "block";
     audio.load();
 
     audio.play().catch(error => {
-      log('Audio play blocked or failed:\n' + error.message);
+      log("Audio play blocked or failed:\n" + error.message);
     });
   }
 }
 
-window.rescan = function() {
-  const playerOverlay = document.getElementById('playerOverlay');
-  const scanOverlay = document.getElementById('scanOverlay');
-  const scanLabel = document.getElementById('scanLabel');
-  const video = document.getElementById('mediaVideo');
-  const audio = document.getElementById('mediaAudio');
+function rescan() {
+  const playerOverlay = document.getElementById("playerOverlay");
+  const scanOverlay = document.getElementById("scanOverlay");
+  const scanLabel = document.getElementById("scanLabel");
+  const video = document.getElementById("mediaVideo");
+  const audio = document.getElementById("mediaAudio");
 
   video.pause();
   audio.pause();
 
-  playerOverlay.classList.remove('active');
-  scanOverlay.style.display = 'flex';
-  scanLabel.textContent = 'تصویر را جلوی دوربین بگیرید';
+  playerOverlay.classList.remove("active");
+  scanOverlay.style.display = "flex";
+  scanLabel.textContent = "تصویر را جلوی دوربین بگیرید";
 
-  log('✅ Camera is active. Show the target image.');
-};
+  log("✅ Camera is active. Show the target image.");
+}
 
-window.closeAR = async function() {
+async function closeAR() {
   await stopARInstance();
 
   resetMedia();
 
-  document.getElementById('modal').classList.remove('active');
-  document.getElementById('playerOverlay').classList.remove('active');
-  document.getElementById('scanOverlay').style.display = 'flex';
-  document.getElementById('mindar-container').innerHTML = '';
+  document.getElementById("modal").classList.remove("active");
+  document.getElementById("playerOverlay").classList.remove("active");
+  document.getElementById("scanOverlay").style.display = "flex";
+  document.getElementById("mindar-container").innerHTML = "";
 
-  log('AR closed');
-};
+  log("AR closed");
+}
 
-window.addEventListener('keydown', event => {
-  if (event.key === 'Escape') {
-    window.closeAR();
+function bindButtons() {
+  const sampleButtons = document.querySelectorAll("[data-sample]");
+  const closeBtn = document.getElementById("closeBtn");
+  const rescanBtn = document.getElementById("rescanBtn");
+
+  sampleButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.sample);
+      startAR(index);
+    });
+  });
+
+  closeBtn.addEventListener("click", closeAR);
+  rescanBtn.addEventListener("click", rescan);
+
+  log("✅ App loaded. Buttons are ready.");
+}
+
+bindButtons();
+
+window.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeAR();
   }
 });
 </script>

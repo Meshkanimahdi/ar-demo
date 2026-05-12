@@ -326,6 +326,40 @@
     font-size: .85rem;
     color: var(--muted);
     margin-bottom: .75rem;
+    text-align: center;
+  }
+
+  .manual-play-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+
+  .manual-play-hint {
+    font-size: .8rem;
+    color: rgba(255,255,255,.75);
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  .play-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: .9rem 1.6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-width: 160px;
+    box-shadow: 0 10px 30px rgba(108,99,255,.35);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .play-btn:active {
+    transform: scale(.97);
   }
 
   .rescan-btn {
@@ -411,7 +445,7 @@
 
   <div class="modal-bar">
     <span class="modal-title" id="modal-title">Sample <span class="pulse"></span></span>
-    <button class="close-btn" id="closeBtn">✕</button>
+    <button class="close-btn" id="closeBtn" type="button">✕</button>
   </div>
 
   <div class="scan-overlay" id="scanOverlay">
@@ -427,10 +461,18 @@
   <div class="player-overlay" id="playerOverlay">
     <div class="player-label" id="playerLabel"></div>
 
-    <video id="mediaVideo" controls playsinline webkit-playsinline style="display:none"></video>
-    <audio id="mediaAudio" controls style="display:none"></audio>
+    <div class="manual-play-box" id="manualPlayBox">
+      <button class="play-btn" id="playBtn" type="button">▶ پخش</button>
+      <div class="manual-play-hint">
+        تصویر شناسایی شد.<br>
+        برای پخش فایل، روی دکمه پخش بزنید.
+      </div>
+    </div>
 
-    <button class="rescan-btn" id="rescanBtn">🔄 اسکن مجدد</button>
+    <video id="mediaVideo" controls playsinline webkit-playsinline preload="metadata" style="display:none"></video>
+    <audio id="mediaAudio" controls preload="metadata" style="display:none"></audio>
+
+    <button class="rescan-btn" id="rescanBtn" type="button">🔄 اسکن مجدد</button>
   </div>
 
   <div id="debug">در حال آماده‌سازی...</div>
@@ -439,7 +481,7 @@
 
 <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 
-<script type="importmap">
+<script type="importmap-shim">
 {
   "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -449,7 +491,7 @@
 }
 </script>
 
-<script type="module">
+<script type="module-shim">
 import { MindARThree } from "mindar-image-three";
 
 const SAMPLES = [
@@ -476,6 +518,7 @@ const SAMPLES = [
 let mindarInstance = null;
 let currentSample = null;
 let isStarting = false;
+let mediaPrepared = false;
 
 function log(message) {
   const debugBox = document.getElementById("debug");
@@ -490,6 +533,9 @@ function log(message) {
 function resetMedia() {
   const video = document.getElementById("mediaVideo");
   const audio = document.getElementById("mediaAudio");
+  const manualPlayBox = document.getElementById("manualPlayBox");
+
+  mediaPrepared = false;
 
   if (video) {
     video.pause();
@@ -503,6 +549,10 @@ function resetMedia() {
     audio.removeAttribute("src");
     audio.load();
     audio.style.display = "none";
+  }
+
+  if (manualPlayBox) {
+    manualPlayBox.style.display = "flex";
   }
 }
 
@@ -574,8 +624,8 @@ async function startAR(index) {
     const anchor = mindarInstance.addAnchor(0);
 
     anchor.onTargetFound = () => {
-      log("✅ Target found");
-      showMedia();
+      log("✅ Target found. Media is ready for manual play.");
+      prepareMedia();
     };
 
     anchor.onTargetLost = () => {
@@ -605,16 +655,23 @@ async function startAR(index) {
   }
 }
 
-function showMedia() {
+function prepareMedia() {
+  if (mediaPrepared) return;
+
+  mediaPrepared = true;
+
   const scanOverlay = document.getElementById("scanOverlay");
   const playerOverlay = document.getElementById("playerOverlay");
   const playerLabel = document.getElementById("playerLabel");
   const video = document.getElementById("mediaVideo");
   const audio = document.getElementById("mediaAudio");
+  const manualPlayBox = document.getElementById("manualPlayBox");
 
   scanOverlay.style.display = "none";
   playerOverlay.classList.add("active");
   playerLabel.textContent = currentSample.label;
+
+  manualPlayBox.style.display = "flex";
 
   if (currentSample.type === "video") {
     audio.pause();
@@ -624,9 +681,10 @@ function showMedia() {
     video.style.display = "block";
     video.load();
 
-    video.play().catch(error => {
-      log("Video play blocked or failed:\n" + error.message);
-    });
+    video.onerror = () => {
+      log("❌ Video load error. Google Drive direct links may not support browser streaming.");
+    };
+
   } else {
     video.pause();
     video.style.display = "none";
@@ -635,9 +693,42 @@ function showMedia() {
     audio.style.display = "block";
     audio.load();
 
-    audio.play().catch(error => {
-      log("Audio play blocked or failed:\n" + error.message);
-    });
+    audio.onerror = () => {
+      log("❌ Audio load error. Google Drive direct links may not support browser streaming.");
+    };
+  }
+}
+
+async function playSelectedMedia() {
+  const video = document.getElementById("mediaVideo");
+  const audio = document.getElementById("mediaAudio");
+  const manualPlayBox = document.getElementById("manualPlayBox");
+
+  if (!currentSample) {
+    log("No sample selected.");
+    return;
+  }
+
+  try {
+    if (currentSample.type === "video") {
+      await video.play();
+      manualPlayBox.style.display = "none";
+      log("▶ Video playing");
+    } else {
+      await audio.play();
+      manualPlayBox.style.display = "none";
+      log("▶ Audio playing");
+    }
+  } catch (error) {
+    console.error(error);
+
+    const errorMessage = error && error.message ? error.message : String(error);
+
+    log(
+      "❌ Play error:\n" +
+      errorMessage +
+      "\n\nIf this continues, move the media files from Google Drive to a direct hosting service."
+    );
   }
 }
 
@@ -645,11 +736,8 @@ function rescan() {
   const playerOverlay = document.getElementById("playerOverlay");
   const scanOverlay = document.getElementById("scanOverlay");
   const scanLabel = document.getElementById("scanLabel");
-  const video = document.getElementById("mediaVideo");
-  const audio = document.getElementById("mediaAudio");
 
-  video.pause();
-  audio.pause();
+  resetMedia();
 
   playerOverlay.classList.remove("active");
   scanOverlay.style.display = "flex";
@@ -675,6 +763,7 @@ function bindButtons() {
   const sampleButtons = document.querySelectorAll("[data-sample]");
   const closeBtn = document.getElementById("closeBtn");
   const rescanBtn = document.getElementById("rescanBtn");
+  const playBtn = document.getElementById("playBtn");
 
   sampleButtons.forEach(button => {
     button.addEventListener("click", () => {
@@ -683,8 +772,17 @@ function bindButtons() {
     });
   });
 
-  closeBtn.addEventListener("click", closeAR);
-  rescanBtn.addEventListener("click", rescan);
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeAR);
+  }
+
+  if (rescanBtn) {
+    rescanBtn.addEventListener("click", rescan);
+  }
+
+  if (playBtn) {
+    playBtn.addEventListener("click", playSelectedMedia);
+  }
 
   log("✅ App loaded. Buttons are ready.");
 }

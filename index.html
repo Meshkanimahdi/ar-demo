@@ -27,6 +27,7 @@
     color: var(--text);
     font-family: 'Segoe UI', system-ui, sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
   .header {
@@ -291,87 +292,38 @@
     text-align: center;
   }
 
-  .player-overlay {
-    display: none;
+  .ar-control-panel {
     position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,.93);
-    flex-direction: column;
+    left: 50%;
+    bottom: 72px;
+    transform: translateX(-50%);
+    z-index: 998;
+    display: none;
+    gap: 10px;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
-    z-index: 600;
+    pointer-events: auto;
   }
 
-  .player-overlay.active {
+  .ar-control-panel.active {
     display: flex;
   }
 
-  .player-overlay video {
-    width: 100%;
-    max-width: 480px;
-    border-radius: 12px;
-    background: #000;
-    outline: none;
-  }
-
-  .player-overlay audio {
-    width: 100%;
-    max-width: 480px;
-    margin-top: 1rem;
-    outline: none;
-  }
-
-  .player-label {
-    font-size: .85rem;
-    color: var(--muted);
-    margin-bottom: .75rem;
-    text-align: center;
-  }
-
-  .manual-play-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: .75rem;
-    margin-bottom: 1rem;
-  }
-
-  .manual-play-hint {
-    font-size: .8rem;
-    color: rgba(255,255,255,.75);
-    text-align: center;
-    line-height: 1.7;
-  }
-
-  .play-btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  .ar-small-btn {
+    background: rgba(19,19,26,0.82);
+    border: 1px solid rgba(108,99,255,0.35);
     color: #fff;
-    border: none;
     border-radius: 999px;
-    padding: .9rem 1.6rem;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    min-width: 160px;
-    box-shadow: 0 10px 30px rgba(108,99,255,.35);
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .play-btn:active {
-    transform: scale(.97);
-  }
-
-  .rescan-btn {
-    margin-top: 1.25rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 12px;
-    padding: .75rem 1.5rem;
+    padding: .75rem 1.05rem;
     font-size: .85rem;
     cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .ar-small-btn:active {
+    transform: scale(.96);
   }
 
   .pulse {
@@ -403,7 +355,7 @@
 
 <div class="header">
   <h1>AR Scanner</h1>
-  <p>Image Recognition Demo</p>
+  <p>Real Augmented Reality Video Overlay</p>
 </div>
 
 <div class="grid">
@@ -412,7 +364,7 @@
     <span class="icon">🎵</span>
     <div>
       <span class="label">Sample 1</span>
-      <span class="badge">Audio</span>
+      <span class="badge">Audio AR Card</span>
     </div>
   </button>
 
@@ -420,7 +372,7 @@
     <span class="icon">🎬</span>
     <div>
       <span class="label">Sample 2</span>
-      <span class="badge">Video</span>
+      <span class="badge">Video AR</span>
     </div>
   </button>
 
@@ -428,7 +380,7 @@
     <span class="icon">🎬</span>
     <div>
       <span class="label">Sample 3</span>
-      <span class="badge">Video</span>
+      <span class="badge">Video AR</span>
     </div>
   </button>
 
@@ -436,7 +388,7 @@
 
 <p class="hint">
   هر دکمه دوربین را فعال می‌کند.<br>
-  تصویر مربوطه را جلوی دوربین بگیرید.
+  تصویر مربوطه را جلوی دوربین بگیرید تا محتوا دقیقاً روی خود تصویر ظاهر شود.
 </p>
 
 <div class="modal" id="modal">
@@ -458,21 +410,9 @@
     <div class="scan-label" id="scanLabel">در حال بارگذاری...</div>
   </div>
 
-  <div class="player-overlay" id="playerOverlay">
-    <div class="player-label" id="playerLabel"></div>
-
-    <div class="manual-play-box" id="manualPlayBox">
-      <button class="play-btn" id="playBtn" type="button">▶ پخش</button>
-      <div class="manual-play-hint">
-        تصویر شناسایی شد.<br>
-        برای پخش فایل، روی دکمه پخش بزنید.
-      </div>
-    </div>
-
-    <video id="mediaVideo" controls playsinline webkit-playsinline preload="metadata" style="display:none"></video>
-    <audio id="mediaAudio" controls preload="metadata" style="display:none"></audio>
-
-    <button class="rescan-btn" id="rescanBtn" type="button">🔄 اسکن مجدد</button>
+  <div class="ar-control-panel" id="arControlPanel">
+    <button class="ar-small-btn" id="soundBtn" type="button">🔊 صدا</button>
+    <button class="ar-small-btn" id="rescanBtn" type="button">🔄 اسکن مجدد</button>
   </div>
 
   <div id="debug">در حال آماده‌سازی...</div>
@@ -492,6 +432,7 @@
 </script>
 
 <script type="module-shim">
+import * as THREE from "three";
 import { MindARThree } from "mindar-image-three";
 
 const SAMPLES = [
@@ -517,8 +458,12 @@ const SAMPLES = [
 
 let mindarInstance = null;
 let currentSample = null;
+let currentAnchor = null;
+let currentMediaElement = null;
+let currentVideoTexture = null;
+let currentARMesh = null;
 let isStarting = false;
-let mediaPrepared = false;
+let targetIsVisible = false;
 
 function log(message) {
   const debugBox = document.getElementById("debug");
@@ -530,35 +475,43 @@ function log(message) {
   console.log(message);
 }
 
-function resetMedia() {
-  const video = document.getElementById("mediaVideo");
-  const audio = document.getElementById("mediaAudio");
-  const manualPlayBox = document.getElementById("manualPlayBox");
+function clearARContent() {
+  targetIsVisible = false;
 
-  mediaPrepared = false;
-
-  if (video) {
-    video.pause();
-    video.removeAttribute("src");
-    video.load();
-    video.style.display = "none";
-    video.onerror = null;
+  if (currentAnchor && currentARMesh) {
+    try {
+      currentAnchor.group.remove(currentARMesh);
+    } catch (error) {}
   }
 
-  if (audio) {
-    audio.pause();
-    audio.removeAttribute("src");
-    audio.load();
-    audio.style.display = "none";
-    audio.onerror = null;
+  if (currentVideoTexture) {
+    try {
+      currentVideoTexture.dispose();
+    } catch (error) {}
   }
 
-  if (manualPlayBox) {
-    manualPlayBox.style.display = "flex";
+  if (currentMediaElement) {
+    try {
+      currentMediaElement.pause();
+      currentMediaElement.removeAttribute("src");
+      currentMediaElement.load();
+    } catch (error) {}
+  }
+
+  currentAnchor = null;
+  currentARMesh = null;
+  currentVideoTexture = null;
+  currentMediaElement = null;
+
+  const arControlPanel = document.getElementById("arControlPanel");
+  if (arControlPanel) {
+    arControlPanel.classList.remove("active");
   }
 }
 
 async function stopARInstance() {
+  clearARContent();
+
   if (!mindarInstance) return;
 
   try {
@@ -578,6 +531,148 @@ async function stopARInstance() {
   mindarInstance = null;
 }
 
+function createAudioCardTexture(textLine1, textLine2) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 640;
+
+  const ctx = canvas.getContext("2d");
+
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, "#6c63ff");
+  gradient.addColorStop(1, "#ff6584");
+
+  ctx.fillStyle = "rgba(10,10,15,0.88)";
+  roundRect(ctx, 40, 40, canvas.width - 80, canvas.height - 80, 48);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 5;
+  roundRect(ctx, 40, 40, canvas.width - 80, canvas.height - 80, 48);
+  ctx.stroke();
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(canvas.width / 2, 210, 86, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 92px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("♪", canvas.width / 2, 210);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 54px Arial";
+  ctx.fillText(textLine1, canvas.width / 2, 380);
+
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  ctx.font = "34px Arial";
+  ctx.fillText(textLine2, canvas.width / 2, 445);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function createAudioARMesh() {
+  const texture = createAudioCardTexture("Audio Experience", "Tap sound if needed");
+
+  const geometry = new THREE.PlaneGeometry(1, 0.62);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(0, 0, 0.02);
+
+  currentVideoTexture = texture;
+  currentARMesh = mesh;
+
+  return mesh;
+}
+
+function createVideoARMesh(videoElement) {
+  const texture = new THREE.VideoTexture(videoElement);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  currentVideoTexture = texture;
+
+  const videoAspect = videoElement.videoWidth && videoElement.videoHeight
+    ? videoElement.videoWidth / videoElement.videoHeight
+    : 16 / 9;
+
+  let width = 1.0;
+  let height = width / videoAspect;
+
+  if (height > 1.0) {
+    height = 1.0;
+    width = height * videoAspect;
+  }
+
+  const geometry = new THREE.PlaneGeometry(width, height);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: false,
+    side: THREE.DoubleSide
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(0, 0, 0.02);
+
+  currentARMesh = mesh;
+
+  return mesh;
+}
+
+function createVideoElement(src) {
+  const video = document.createElement("video");
+
+  video.src = src;
+  video.crossOrigin = "anonymous";
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  video.preload = "auto";
+
+  currentMediaElement = video;
+
+  return video;
+}
+
+function createAudioElement(src) {
+  const audio = document.createElement("audio");
+
+  audio.src = src;
+  audio.loop = true;
+  audio.preload = "auto";
+
+  currentMediaElement = audio;
+
+  return audio;
+}
+
 async function startAR(index) {
   if (isStarting) return;
 
@@ -588,17 +683,15 @@ async function startAR(index) {
   const mindarContainer = document.getElementById("mindar-container");
   const scanOverlay = document.getElementById("scanOverlay");
   const scanLabel = document.getElementById("scanLabel");
-  const playerOverlay = document.getElementById("playerOverlay");
   const modalTitle = document.getElementById("modal-title");
+  const arControlPanel = document.getElementById("arControlPanel");
 
   modal.classList.add("active");
   modalTitle.innerHTML = `Sample ${index + 1} <span class="pulse"></span>`;
 
   scanOverlay.style.display = "flex";
   scanLabel.textContent = "در حال بارگذاری...";
-  playerOverlay.classList.remove("active");
-
-  resetMedia();
+  arControlPanel.classList.remove("active");
 
   mindarContainer.innerHTML = "";
 
@@ -623,15 +716,76 @@ async function startAR(index) {
 
     const { renderer, scene, camera } = mindarInstance;
 
-    const anchor = mindarInstance.addAnchor(0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    anchor.onTargetFound = () => {
-      log("✅ Target found. Media is ready for manual play.");
-      prepareMedia();
+    const anchor = mindarInstance.addAnchor(0);
+    currentAnchor = anchor;
+
+    if (currentSample.type === "video") {
+      const video = createVideoElement(currentSample.mediaUrl);
+
+      video.addEventListener("loadedmetadata", () => {
+        if (!currentAnchor || currentARMesh) return;
+
+        const mesh = createVideoARMesh(video);
+        currentAnchor.group.add(mesh);
+
+        log("✅ Video texture prepared. Show target image.");
+      });
+
+      video.addEventListener("error", () => {
+        log("❌ Video error. Check MP4 codec: H.264 video + AAC audio.");
+      });
+
+      video.load();
+
+    } else {
+      const audio = createAudioElement(currentSample.mediaUrl);
+      const audioMesh = createAudioARMesh();
+
+      anchor.group.add(audioMesh);
+
+      audio.addEventListener("error", () => {
+        log("❌ Audio error. Check MP3 path and format.");
+      });
+
+      audio.load();
+    }
+
+    anchor.onTargetFound = async () => {
+      targetIsVisible = true;
+
+      scanOverlay.style.display = "none";
+      arControlPanel.classList.add("active");
+
+      log("✅ Target found. AR content locked on image.");
+
+      try {
+        if (currentMediaElement) {
+          if (currentSample.type === "video") {
+            currentMediaElement.muted = true;
+            await currentMediaElement.play();
+            log("▶ AR video playing on image. Tap sound button for audio.");
+          } else {
+            await currentMediaElement.play();
+            log("▶ AR audio playing. Audio card locked on image.");
+          }
+        }
+      } catch (error) {
+        log("⚠️ Autoplay blocked. Tap 🔊 sound button.");
+      }
     };
 
     anchor.onTargetLost = () => {
-      log("Target lost");
+      targetIsVisible = false;
+
+      log("Target lost. AR content paused.");
+
+      if (currentMediaElement) {
+        try {
+          currentMediaElement.pause();
+        } catch (error) {}
+      }
     };
 
     log("Starting camera...");
@@ -642,6 +796,12 @@ async function startAR(index) {
     scanLabel.textContent = "تصویر را جلوی دوربین بگیرید";
 
     renderer.setAnimationLoop(() => {
+      if (currentARMesh && currentSample && currentSample.type === "audio" && targetIsVisible) {
+        currentARMesh.rotation.z = Math.sin(Date.now() * 0.002) * 0.035;
+        const scale = 1 + Math.sin(Date.now() * 0.004) * 0.025;
+        currentARMesh.scale.set(scale, scale, scale);
+      }
+
       renderer.render(scene, camera);
     });
 
@@ -657,91 +817,38 @@ async function startAR(index) {
   }
 }
 
-function prepareMedia() {
-  if (mediaPrepared) return;
-
-  mediaPrepared = true;
-
-  const scanOverlay = document.getElementById("scanOverlay");
-  const playerOverlay = document.getElementById("playerOverlay");
-  const playerLabel = document.getElementById("playerLabel");
-  const video = document.getElementById("mediaVideo");
-  const audio = document.getElementById("mediaAudio");
-  const manualPlayBox = document.getElementById("manualPlayBox");
-
-  scanOverlay.style.display = "none";
-  playerOverlay.classList.add("active");
-  playerLabel.textContent = currentSample.label;
-
-  manualPlayBox.style.display = "flex";
-
-  if (currentSample.type === "video") {
-    audio.pause();
-    audio.style.display = "none";
-
-    video.src = currentSample.mediaUrl;
-    video.style.display = "block";
-    video.load();
-
-    video.onerror = () => {
-      log("❌ Video load error:\nFile missing, wrong path, unsupported codec, or MP4 is not iPhone-compatible.");
-    };
-
-  } else {
-    video.pause();
-    video.style.display = "none";
-
-    audio.src = currentSample.mediaUrl;
-    audio.style.display = "block";
-    audio.load();
-
-    audio.onerror = () => {
-      log("❌ Audio load error:\nFile missing, wrong path, or unsupported audio format.");
-    };
-  }
-}
-
-async function playSelectedMedia() {
-  const video = document.getElementById("mediaVideo");
-  const audio = document.getElementById("mediaAudio");
-  const manualPlayBox = document.getElementById("manualPlayBox");
-
-  if (!currentSample) {
-    log("No sample selected.");
+async function enableSound() {
+  if (!currentMediaElement || !currentSample) {
+    log("No media is ready.");
     return;
   }
 
   try {
     if (currentSample.type === "video") {
-      await video.play();
-      manualPlayBox.style.display = "none";
-      log("▶ Video playing");
+      currentMediaElement.muted = false;
+      await currentMediaElement.play();
+      log("🔊 Video sound enabled.");
     } else {
-      await audio.play();
-      manualPlayBox.style.display = "none";
-      log("▶ Audio playing");
+      await currentMediaElement.play();
+      log("🔊 Audio enabled.");
     }
   } catch (error) {
-    console.error(error);
-
     const errorMessage = error && error.message ? error.message : String(error);
-
-    log(
-      "❌ Play error:\n" +
-      errorMessage +
-      "\n\nDirect file path is correct, but codec may be unsupported. Use MP3 for audio and MP4 H.264 + AAC for video."
-    );
+    log("❌ Sound play error:\n" + errorMessage);
   }
 }
 
 function rescan() {
-  const playerOverlay = document.getElementById("playerOverlay");
   const scanOverlay = document.getElementById("scanOverlay");
   const scanLabel = document.getElementById("scanLabel");
 
-  resetMedia();
+  if (currentMediaElement) {
+    try {
+      currentMediaElement.pause();
+      currentMediaElement.currentTime = 0;
+    } catch (error) {}
+  }
 
-  playerOverlay.classList.remove("active");
   scanOverlay.style.display = "flex";
   scanLabel.textContent = "تصویر را جلوی دوربین بگیرید";
 
@@ -751,12 +858,10 @@ function rescan() {
 async function closeAR() {
   await stopARInstance();
 
-  resetMedia();
-
   document.getElementById("modal").classList.remove("active");
-  document.getElementById("playerOverlay").classList.remove("active");
   document.getElementById("scanOverlay").style.display = "flex";
   document.getElementById("mindar-container").innerHTML = "";
+  document.getElementById("arControlPanel").classList.remove("active");
 
   log("AR closed");
 }
@@ -765,7 +870,7 @@ function bindButtons() {
   const sampleButtons = document.querySelectorAll("[data-sample]");
   const closeBtn = document.getElementById("closeBtn");
   const rescanBtn = document.getElementById("rescanBtn");
-  const playBtn = document.getElementById("playBtn");
+  const soundBtn = document.getElementById("soundBtn");
 
   sampleButtons.forEach(button => {
     button.addEventListener("click", () => {
@@ -782,8 +887,8 @@ function bindButtons() {
     rescanBtn.addEventListener("click", rescan);
   }
 
-  if (playBtn) {
-    playBtn.addEventListener("click", playSelectedMedia);
+  if (soundBtn) {
+    soundBtn.addEventListener("click", enableSound);
   }
 
   log("✅ App loaded. Buttons are ready.");

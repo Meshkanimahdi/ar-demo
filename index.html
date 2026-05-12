@@ -38,36 +38,46 @@
   .hint { text-align:center; font-size:.72rem; color:var(--muted); padding:0 1rem 2rem; max-width:480px; margin:0 auto; line-height:1.7; }
 
   /* Modal */
-  .modal { display:none; position:fixed; inset:0; background:#000; z-index:200; flex-direction:column; align-items:center; justify-content:flex-start; }
-  .modal.active { display:flex; }
+  .modal { display:none; position:fixed; inset:0; background:#000; z-index:200; }
+  .modal.active { display:block; }
+
+  /* MindAR container — باید پر باشه */
+  #mindar-container {
+    position:absolute; inset:0; width:100%; height:100%;
+  }
 
   .modal-bar {
-    position:absolute; top:0; left:0; right:0; z-index:10;
+    position:absolute; top:0; left:0; right:0; z-index:999;
     display:flex; align-items:center; justify-content:space-between;
     padding:max(1rem,env(safe-area-inset-top)) 1.25rem 1rem;
     background:linear-gradient(to bottom,rgba(0,0,0,0.75),transparent);
+    pointer-events:none;
   }
+  .modal-bar button { pointer-events:all; }
   .modal-title { font-size:.95rem; font-weight:600; color:#fff; }
   .close-btn {
     background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2);
-    color:#fff; border-radius:50%; width:36px; height:36px; font-size:1.1rem;
+    color:#fff; border-radius:50%; width:40px; height:40px; font-size:1.2rem;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
     -webkit-tap-highlight-color:transparent;
   }
 
-  /* Camera view */
-  #ar-video {
-    width:100%; height:100vh; object-fit:cover; display:block;
+  /* Debug panel */
+  #debug {
+    position:absolute; bottom:0; left:0; right:0; z-index:999;
+    background:rgba(0,0,0,0.75); color:#4ade80;
+    font-size:12px; font-family:monospace;
+    padding:8px 12px; line-height:1.6;
+    pointer-events:none;
   }
 
-  /* Scan overlay */
+  /* Scan frame روی دوربین */
   .scan-overlay {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; pointer-events:none;
+    position:absolute; inset:0; z-index:500;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    pointer-events:none;
   }
-  .scan-box {
-    width:220px; height:220px; position:relative;
-  }
+  .scan-box { width:220px; height:220px; position:relative; }
   .scan-box::before,.scan-box::after,.scan-box .bl,.scan-box .br {
     content:''; position:absolute; width:32px; height:32px;
     border-color:var(--accent); border-style:solid;
@@ -79,22 +89,26 @@
   .scan-line {
     position:absolute; left:8px; right:8px; height:2px;
     background:linear-gradient(to right,transparent,var(--accent),transparent);
-    animation:scan 2s ease-in-out infinite; top:20px;
+    animation:scanAnim 2s ease-in-out infinite; top:20px;
   }
-  @keyframes scan { 0%,100%{top:18px;opacity:.5} 50%{top:calc(100% - 20px);opacity:1} }
-  .scan-label { margin-top:1rem; font-size:.8rem; color:rgba(255,255,255,.7); letter-spacing:.05em; }
+  @keyframes scanAnim { 0%,100%{top:18px;opacity:.5} 50%{top:calc(100% - 20px);opacity:1} }
+  .scan-label { margin-top:1rem; font-size:.8rem; color:rgba(255,255,255,.8); letter-spacing:.05em; text-align:center; }
 
-  /* Media player overlay */
+  /* Media player */
   .player-overlay {
-    display:none; position:absolute; inset:0; background:rgba(0,0,0,.92);
+    display:none; position:absolute; inset:0; background:rgba(0,0,0,.93);
     flex-direction:column; align-items:center; justify-content:center;
-    padding:1rem; z-index:5;
+    padding:1.5rem; z-index:600;
   }
   .player-overlay.active { display:flex; }
   .player-overlay video { width:100%; max-width:480px; border-radius:12px; background:#000; outline:none; }
   .player-overlay audio { width:100%; max-width:480px; margin-top:1rem; outline:none; }
   .player-label { font-size:.85rem; color:var(--muted); margin-bottom:.75rem; }
-  .player-hint { font-size:.72rem; color:var(--muted); margin-top:1rem; opacity:.7; }
+  .rescan-btn {
+    margin-top:1.25rem; background:var(--surface); border:1px solid var(--border);
+    color:var(--text); border-radius:12px; padding:.75rem 1.5rem;
+    font-size:.85rem; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
 
   .pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); margin-left:5px; animation:p 1.4s ease-in-out infinite; vertical-align:middle; }
   @keyframes p { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
@@ -135,58 +149,69 @@
 
 <!-- AR Modal -->
 <div class="modal" id="modal">
+
+  <!-- MindAR اینجا render میکنه -->
+  <div id="mindar-container"></div>
+
   <div class="modal-bar">
     <span class="modal-title" id="modal-title">Sample <span class="pulse"></span></span>
     <button class="close-btn" onclick="closeAR()">✕</button>
   </div>
-
-  <video id="ar-video" autoplay playsinline muted></video>
 
   <div class="scan-overlay" id="scanOverlay">
     <div class="scan-box">
       <div class="bl"></div><div class="br"></div>
       <div class="scan-line"></div>
     </div>
-    <div class="scan-label">تصویر را داخل کادر قرار دهید</div>
+    <div class="scan-label" id="scanLabel">در حال بارگذاری...</div>
   </div>
 
   <div class="player-overlay" id="playerOverlay">
     <div class="player-label" id="playerLabel"></div>
-    <video id="mediaVideo" controls autoplay style="display:none"></video>
-    <audio id="mediaAudio" controls autoplay style="display:none"></audio>
-    <div class="player-hint">برای اسکن مجدد، پنجره را ببندید و دوباره باز کنید</div>
+    <video id="mediaVideo" controls playsinline style="display:none"></video>
+    <audio id="mediaAudio" controls style="display:none"></audio>
+    <button class="rescan-btn" onclick="rescan()">🔄 اسکن مجدد</button>
   </div>
+
+  <div id="debug">در حال آماده‌سازی...</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+<!-- THREE.js اول -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+<!-- بعد MindAR -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+
 <script>
 const SAMPLES = [
   {
     label: 'Sample 1 — Audio',
     type: 'audio',
     mindFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A01',
-    imageFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/a01.webp',
     mediaUrl: 'https://drive.google.com/uc?export=download&id=1SW8ORQRZj-kY5dCpCI4p-Td7ZkLX1qZS'
   },
   {
     label: 'Sample 2 — Video',
     type: 'video',
     mindFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A02',
-    imageFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/a02.jpg',
     mediaUrl: 'https://drive.google.com/uc?export=download&id=1xNzvWmXGkkqLtUWrrutCSWIsrnaWc32q'
   },
   {
     label: 'Sample 3 — Video',
     type: 'video',
     mindFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A03',
-    imageFile: 'https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/a03.jpg',
     mediaUrl: 'https://drive.google.com/uc?export=download&id=1QkccEkQwgQ3NKK6QLHcHuLgMMMI0NFd9'
   }
 ];
 
 let mindarInstance = null;
 let currentSample = null;
-let cameraStream = null;
+let animLoop = null;
+
+function log(msg) {
+  const d = document.getElementById('debug');
+  if (d) d.textContent = msg;
+  console.log(msg);
+}
 
 async function startAR(index) {
   currentSample = SAMPLES[index];
@@ -194,27 +219,38 @@ async function startAR(index) {
   document.getElementById('modal').classList.add('active');
   document.getElementById('modal-title').innerHTML = `Sample ${index + 1} <span class="pulse"></span>`;
   document.getElementById('scanOverlay').style.display = 'flex';
+  document.getElementById('scanLabel').textContent = 'در حال بارگذاری...';
   document.getElementById('playerOverlay').classList.remove('active');
   document.getElementById('mediaVideo').style.display = 'none';
   document.getElementById('mediaAudio').style.display = 'none';
   document.getElementById('mediaVideo').src = '';
   document.getElementById('mediaAudio').src = '';
+  document.getElementById('mindar-container').innerHTML = '';
+
+  log('در حال بارگذاری کتابخانه AR...');
 
   try {
-    const MindARThree = window.MINDAR.IMAGE.MindARThree;
-
     if (mindarInstance) {
-      await mindarInstance.stop();
+      try { await mindarInstance.stop(); } catch(e) {}
       mindarInstance = null;
     }
+    if (animLoop) { cancelAnimationFrame(animLoop); animLoop = null; }
+
+    log('در حال خواندن فایل target: ' + currentSample.mindFile);
+
+    const MindARThree = window.MINDAR.IMAGE.MindARThree;
 
     mindarInstance = new MindARThree({
-      container: document.getElementById('modal'),
+      container: document.getElementById('mindar-container'),
       imageTargetSrc: currentSample.mindFile,
       maxTrack: 1,
       uiLoading: 'no',
       uiScanning: 'no',
-      uiError: 'no'
+      uiError: 'no',
+      filterMinCF: 0.001,
+      filterBeta: 0.01,
+      missTolerance: 5,
+      warmupTolerance: 3
     });
 
     const { renderer, scene, camera } = mindarInstance;
@@ -222,32 +258,27 @@ async function startAR(index) {
     const anchor = mindarInstance.addAnchor(0);
 
     anchor.onTargetFound = () => {
+      log('✅ تصویر شناسایی شد!');
       showMedia();
     };
 
+    anchor.onTargetLost = () => {
+      log('تصویر از دید خارج شد');
+    };
+
+    log('در حال راه‌اندازی دوربین...');
     await mindarInstance.start();
+    log('✅ دوربین فعال — تصویر را نشان دهید');
+    document.getElementById('scanLabel').textContent = 'تصویر را جلوی دوربین بگیرید';
 
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
 
   } catch (err) {
-    console.error('MindAR error:', err);
-    fallbackCamera(index);
+    log('❌ خطا: ' + err.message);
+    console.error(err);
   }
-}
-
-function fallbackCamera(index) {
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'environment' }
-  }).then(stream => {
-    cameraStream = stream;
-    const v = document.getElementById('ar-video');
-    v.srcObject = stream;
-    v.play();
-  }).catch(() => {
-    document.getElementById('scanOverlay').querySelector('.scan-label').textContent = '⚠️ دسترسی به دوربین رد شد';
-  });
 }
 
 function showMedia() {
@@ -260,14 +291,23 @@ function showMedia() {
     v.src = currentSample.mediaUrl;
     v.style.display = 'block';
     v.load();
-    v.play().catch(() => {});
+    v.play().catch(e => log('video play error: ' + e.message));
   } else {
     const a = document.getElementById('mediaAudio');
     a.src = currentSample.mediaUrl;
     a.style.display = 'block';
     a.load();
-    a.play().catch(() => {});
+    a.play().catch(e => log('audio play error: ' + e.message));
   }
+}
+
+function rescan() {
+  document.getElementById('playerOverlay').classList.remove('active');
+  document.getElementById('mediaVideo').pause();
+  document.getElementById('mediaAudio').pause();
+  document.getElementById('scanOverlay').style.display = 'flex';
+  document.getElementById('scanLabel').textContent = 'تصویر را جلوی دوربین بگیرید';
+  log('✅ دوربین فعال — تصویر را نشان دهید');
 }
 
 async function closeAR() {
@@ -275,13 +315,11 @@ async function closeAR() {
     try { await mindarInstance.stop(); } catch(e) {}
     mindarInstance = null;
   }
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
+  if (animLoop) { cancelAnimationFrame(animLoop); animLoop = null; }
   document.getElementById('mediaVideo').pause();
   document.getElementById('mediaAudio').pause();
   document.getElementById('modal').classList.remove('active');
+  document.getElementById('mindar-container').innerHTML = '';
 }
 
 window.addEventListener('keydown', e => { if (e.key === 'Escape') closeAR(); });

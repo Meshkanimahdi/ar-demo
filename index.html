@@ -498,20 +498,20 @@ const SAMPLES = [
   {
     label: "Sample 1 — Audio",
     type: "audio",
-    mindFile: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A01.mind",
-    mediaUrl: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A01.mp3"
+    mindFile: "./A01.mind",
+    mediaUrl: "./A01.mp3"
   },
   {
     label: "Sample 2 — Video",
     type: "video",
-    mindFile: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A02.mind",
-    mediaUrl: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A02.mp4"
+    mindFile: "./A02.mind",
+    mediaUrl: "./A02.mp4"
   },
   {
     label: "Sample 3 — Video",
     type: "video",
-    mindFile: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A03.mind",
-    mediaUrl: "https://raw.githubusercontent.com/Meshkanimahdi/ar-demo/main/A03.mp4"
+    mindFile: "./A03.mind",
+    mediaUrl: "./A03.mp4"
   }
 ];
 
@@ -542,6 +542,7 @@ function resetMedia() {
     video.removeAttribute("src");
     video.load();
     video.style.display = "none";
+    video.onerror = null;
   }
 
   if (audio) {
@@ -549,6 +550,7 @@ function resetMedia() {
     audio.removeAttribute("src");
     audio.load();
     audio.style.display = "none";
+    audio.onerror = null;
   }
 
   if (manualPlayBox) {
@@ -682,7 +684,7 @@ function prepareMedia() {
     video.load();
 
     video.onerror = () => {
-      log("❌ Video load error. Google Drive direct links may not support browser streaming.");
+      log("❌ Video load error:\nFile missing, wrong path, unsupported codec, or MP4 is not iPhone-compatible.");
     };
 
   } else {
@@ -694,7 +696,7 @@ function prepareMedia() {
     audio.load();
 
     audio.onerror = () => {
-      log("❌ Audio load error. Google Drive direct links may not support browser streaming.");
+      log("❌ Audio load error:\nFile missing, wrong path, or unsupported audio format.");
     };
   }
 }
@@ -727,7 +729,7 @@ async function playSelectedMedia() {
     log(
       "❌ Play error:\n" +
       errorMessage +
-      "\n\nIf this continues, move the media files from Google Drive to a direct hosting service."
+      "\n\nDirect file path is correct, but codec may be unsupported. Use MP3 for audio and MP4 H.264 + AAC for video."
     );
   }
 }

@@ -13,29 +13,28 @@
   }
 
   :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
+    --bg: #000;
     --accent: #6c63ff;
     --accent2: #ff6584;
-    --text:#f0eeff;
-    --muted:#8887a0;
-    --border: rgba(108,99,255,0.2);
+    --text: #ffffff;
   }
 
+  html,
   body {
+    width: 100%;
+    height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    min-height: 100vh;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     overflow: hidden;
   }
 
-  .modal {
-    display: block;
+  #app {
     position: fixed;
     inset: 0;
+    width: 100%;
+    height: 100%;
     background: #000;
-    z-index: 200;
   }
 
   #mindar-container {
@@ -46,58 +45,42 @@
     overflow: hidden;
   }
 
-  .modal-bar {
+  .top-status {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     z-index: 999;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: max(1rem, env(safe-area-inset-top)) 1.25rem 1rem;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
-    pointer-events: none;
-  }
-
-  .modal-title {
-    font-size: .95rem;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem 1rem;
+    text-align: center;
+    color: #fff;
+    font-size: .88rem;
     font-weight: 600;
-    color: #fff;
-  }
-
-  .close-btn {
-    pointer-events: all;
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #fff;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  #debug {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 999;
-    background: rgba(0,0,0,0.75);
-    color: #4ade80;
-    font-size: 12px;
-    font-family: monospace;
-    padding: 8px 12px;
-    line-height: 1.6;
+    background: linear-gradient(to bottom, rgba(0,0,0,.72), transparent);
     pointer-events: none;
-    direction: ltr;
-    text-align: left;
-    white-space: pre-wrap;
+  }
+
+  .pulse {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-left: 6px;
+    animation: pulseAnim 1.3s ease-in-out infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes pulseAnim {
+    0%, 100% {
+      opacity: .35;
+      transform: scale(.75);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.25);
+    }
   }
 
   .scan-overlay {
@@ -121,7 +104,7 @@
   .scan-box::after,
   .scan-box .bl,
   .scan-box .br {
-    content: '';
+    content: "";
     position: absolute;
     width: 34px;
     height: 34px;
@@ -133,28 +116,28 @@
     top: 0;
     left: 0;
     border-width: 3px 0 0 3px;
-    border-radius: 5px 0 0 0;
+    border-radius: 6px 0 0 0;
   }
 
   .scan-box::after {
     top: 0;
     right: 0;
     border-width: 3px 3px 0 0;
-    border-radius: 0 5px 0 0;
+    border-radius: 0 6px 0 0;
   }
 
   .scan-box .bl {
     bottom: 0;
     left: 0;
     border-width: 0 0 3px 3px;
-    border-radius: 0 0 0 5px;
+    border-radius: 0 0 0 6px;
   }
 
   .scan-box .br {
     bottom: 0;
     right: 0;
     border-width: 0 3px 3px 0;
-    border-radius: 0 0 5px 0;
+    border-radius: 0 0 6px 0;
   }
 
   .scan-line {
@@ -162,15 +145,15 @@
     left: 8px;
     right: 8px;
     height: 2px;
+    top: 20px;
     background: linear-gradient(to right, transparent, var(--accent), transparent);
     animation: scanAnim 2s ease-in-out infinite;
-    top: 20px;
   }
 
   @keyframes scanAnim {
-    0%,100% {
+    0%, 100% {
       top: 18px;
-      opacity: .5;
+      opacity: .45;
     }
 
     50% {
@@ -181,75 +164,58 @@
 
   .scan-label {
     margin-top: 1rem;
+    color: rgba(255,255,255,.86);
     font-size: .82rem;
-    color: rgba(255,255,255,.85);
-    letter-spacing: .03em;
     text-align: center;
     line-height: 1.8;
+    padding: 0 1rem;
   }
 
-  .ar-control-panel {
+  #debug {
     position: absolute;
-    left: 50%;
-    bottom: 72px;
-    transform: translateX(-50%);
-    z-index: 998;
-    display: none;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
-    pointer-events: auto;
-  }
-
-  .ar-control-panel.active {
-    display: flex;
-  }
-
-  .ar-small-btn {
-    background: rgba(19,19,26,0.82);
-    border: 1px solid rgba(108,99,255,0.35);
-    color: #fff;
-    border-radius: 999px;
-    padding: .75rem 1.05rem;
-    font-size: .85rem;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .ar-small-btn:active {
-    transform: scale(.96);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    padding: 8px 12px;
+    background: rgba(0,0,0,.72);
+    color: #4ade80;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    direction: ltr;
+    text-align: left;
+    pointer-events: none;
   }
 
   .audio-unlock {
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%);
     z-index: 1000;
+    transform: translate(-50%, -50%);
     display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: .75rem;
-    background: rgba(10,10,15,.88);
-    border: 1px solid rgba(108,99,255,.35);
-    border-radius: 24px;
-    padding: 1.2rem;
     width: min(86vw, 360px);
-    text-align: center;
+    padding: 1.2rem;
+    border-radius: 24px;
+    border: 1px solid rgba(108,99,255,.35);
+    background: rgba(10,10,15,.9);
+    box-shadow: 0 20px 60px rgba(0,0,0,.45);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+    text-align: center;
   }
 
   .audio-unlock.active {
-    display: flex;
+    display: block;
   }
 
   .audio-unlock p {
-    color: rgba(255,255,255,.82);
+    color: rgba(255,255,255,.84);
     font-size: .9rem;
     line-height: 1.8;
+    margin-bottom: .9rem;
   }
 
   .audio-unlock button {
@@ -261,44 +227,24 @@
     font-size: .95rem;
     font-weight: 700;
     cursor: pointer;
-    min-width: 160px;
+    min-width: 170px;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .pulse {
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-    margin-left: 5px;
-    animation: pulseAnim 1.4s ease-in-out infinite;
-    vertical-align: middle;
-  }
-
-  @keyframes pulseAnim {
-    0%,100% {
-      opacity: .3;
-      transform: scale(.8);
-    }
-
-    50% {
-      opacity: 1;
-      transform: scale(1.2);
-    }
+  .audio-unlock button:active {
+    transform: scale(.97);
   }
 </style>
 </head>
 
 <body>
 
-<div class="modal" id="modal">
+<div id="app">
 
   <div id="mindar-container"></div>
 
-  <div class="modal-bar">
-    <span class="modal-title" id="modal-title">AR Scanner <span class="pulse"></span></span>
-    <button class="close-btn" id="closeBtn" type="button">✕</button>
+  <div class="top-status" id="topStatus">
+    AR Scanner <span class="pulse"></span>
   </div>
 
   <div class="scan-overlay" id="scanOverlay">
@@ -312,11 +258,6 @@
       در حال راه‌اندازی دوربین...<br>
       هرکدام از سه تصویر را جلوی دوربین بگیرید.
     </div>
-  </div>
-
-  <div class="ar-control-panel" id="arControlPanel">
-    <button class="ar-small-btn" id="soundBtn" type="button">🔊 صدا</button>
-    <button class="ar-small-btn" id="rescanBtn" type="button">🔄 اسکن مجدد</button>
   </div>
 
   <div class="audio-unlock" id="audioUnlock">
@@ -346,34 +287,25 @@
 import * as THREE from "three";
 import { MindARThree } from "mindar-image-three";
 
-/*
-  خیلی مهم:
-  این فایل باید یک mind چندتارگته باشد.
-  ترتیب داخل compiler باید همین باشد:
-
-  target index 0 = a01.webp
-  target index 1 = a02.jpg
-  target index 2 = a03.jpg
-*/
 const MULTI_TARGET_MIND_FILE = "./targets.mind";
 
 const SAMPLES = [
   {
-    label: "Sample 1 — Audio",
+    label: "Audio Experience",
     type: "audio",
     targetIndex: 0,
     targetImage: "./a01.webp",
     mediaUrl: "./A01.mp3"
   },
   {
-    label: "Sample 2 — Video",
+    label: "Video Experience 1",
     type: "video",
     targetIndex: 1,
     targetImage: "./a02.jpg",
     mediaUrl: "./A02.mp4"
   },
   {
-    label: "Sample 3 — Video",
+    label: "Video Experience 2",
     type: "video",
     targetIndex: 2,
     targetImage: "./a03.jpg",
@@ -384,7 +316,6 @@ const SAMPLES = [
 let mindarInstance = null;
 let currentActiveIndex = null;
 let isStarting = false;
-let audioUnlocked = false;
 
 const anchors = [];
 const arMeshes = [];
@@ -400,6 +331,45 @@ function log(message) {
   }
 
   console.log(message);
+}
+
+function setStatus(message) {
+  const topStatus = document.getElementById("topStatus");
+
+  if (topStatus) {
+    topStatus.innerHTML = message + ' <span class="pulse"></span>';
+  }
+}
+
+function showScanOverlay(message = null) {
+  const scanOverlay = document.getElementById("scanOverlay");
+  const scanLabel = document.getElementById("scanLabel");
+
+  if (scanOverlay) {
+    scanOverlay.style.display = "flex";
+  }
+
+  if (message && scanLabel) {
+    scanLabel.innerHTML = message;
+  }
+}
+
+function hideScanOverlay() {
+  const scanOverlay = document.getElementById("scanOverlay");
+
+  if (scanOverlay) {
+    scanOverlay.style.display = "none";
+  }
+}
+
+function showAudioUnlock() {
+  const box = document.getElementById("audioUnlock");
+  if (box) box.classList.add("active");
+}
+
+function hideAudioUnlock() {
+  const box = document.getElementById("audioUnlock");
+  if (box) box.classList.remove("active");
 }
 
 function loadImageAspect(src) {
@@ -454,16 +424,6 @@ function stopAllMediaExcept(indexToKeep = null) {
   });
 }
 
-function hideAudioUnlock() {
-  const audioUnlock = document.getElementById("audioUnlock");
-  if (audioUnlock) audioUnlock.classList.remove("active");
-}
-
-function showAudioUnlock() {
-  const audioUnlock = document.getElementById("audioUnlock");
-  if (audioUnlock) audioUnlock.classList.add("active");
-}
-
 function clearARContent() {
   anchors.forEach((anchor, index) => {
     const mesh = arMeshes[index];
@@ -509,12 +469,6 @@ function clearARContent() {
   targetAspects.length = 0;
 
   currentActiveIndex = null;
-
-  const arControlPanel = document.getElementById("arControlPanel");
-  if (arControlPanel) {
-    arControlPanel.classList.remove("active");
-  }
-
   hideAudioUnlock();
 }
 
@@ -527,15 +481,11 @@ async function stopARInstance() {
     if (mindarInstance.renderer) {
       mindarInstance.renderer.setAnimationLoop(null);
     }
-  } catch (error) {
-    console.warn("Renderer stop warning:", error);
-  }
+  } catch (error) {}
 
   try {
     await mindarInstance.stop();
-  } catch (error) {
-    console.warn("MindAR stop warning:", error);
-  }
+  } catch (error) {}
 
   mindarInstance = null;
 }
@@ -554,7 +504,7 @@ function roundRect(ctx, x, y, width, height, radius) {
   ctx.closePath();
 }
 
-function createAudioCardTexture(textLine1, textLine2) {
+function createAudioCardTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
   canvas.height = 640;
@@ -587,11 +537,11 @@ function createAudioCardTexture(textLine1, textLine2) {
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 54px Arial";
-  ctx.fillText(textLine1, canvas.width / 2, 380);
+  ctx.fillText("Audio Experience", canvas.width / 2, 380);
 
   ctx.fillStyle = "rgba(255,255,255,0.72)";
   ctx.font = "34px Arial";
-  ctx.fillText(textLine2, canvas.width / 2, 445);
+  ctx.fillText("Sound attached to this image", canvas.width / 2, 445);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
@@ -628,7 +578,7 @@ function createAudioARMesh(sampleIndex) {
   const sample = SAMPLES[sampleIndex];
   const aspect = targetAspects[sampleIndex] || 16 / 9;
 
-  const texture = createAudioCardTexture("Audio Experience", "Sound attached to this image");
+  const texture = createAudioCardTexture();
   textures[sampleIndex] = texture;
 
   const targetWidth = 1;
@@ -650,7 +600,7 @@ function createAudioARMesh(sampleIndex) {
 
   const audio = createAudioElement(sample.mediaUrl);
   audio.addEventListener("error", () => {
-    log("❌ Audio error for target " + sample.targetIndex + ". Check MP3 path and format.");
+    log("❌ Audio error for target " + sample.targetIndex);
   });
 
   mediaElements[sampleIndex] = audio;
@@ -681,7 +631,6 @@ function createVideoARMesh(sampleIndex, videoElement) {
   const targetHeight = 1 / targetAspect;
 
   const geometry = new THREE.PlaneGeometry(targetWidth, targetHeight);
-
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: false,
@@ -692,7 +641,6 @@ function createVideoARMesh(sampleIndex, videoElement) {
 
   const mesh = new THREE.Mesh(geometry, material);
   mesh.position.set(0, 0, 0.02);
-  mesh.rotation.set(0, 0, 0);
 
   arMeshes[sampleIndex] = mesh;
 
@@ -706,7 +654,7 @@ function createVideoARMesh(sampleIndex, videoElement) {
 }
 
 async function prepareAllTargets() {
-  log("Reading all target image sizes...");
+  log("Reading target image sizes...");
 
   for (let i = 0; i < SAMPLES.length; i++) {
     targetAspects[i] = await loadImageAspect(SAMPLES[i].targetImage);
@@ -724,8 +672,8 @@ function setupAnchors() {
     anchors[sampleIndex] = anchor;
 
     if (sample.type === "audio") {
-      const audioMesh = createAudioARMesh(sampleIndex);
-      anchor.group.add(audioMesh);
+      const mesh = createAudioARMesh(sampleIndex);
+      anchor.group.add(mesh);
     }
 
     if (sample.type === "video") {
@@ -742,7 +690,7 @@ function setupAnchors() {
       });
 
       video.addEventListener("error", () => {
-        log("❌ Video error for target " + sample.targetIndex + ". Check MP4 codec: H.264 + AAC.");
+        log("❌ Video error for target " + sample.targetIndex + ". Check H.264 + AAC.");
       });
 
       video.load();
@@ -751,14 +699,10 @@ function setupAnchors() {
     anchor.onTargetFound = async () => {
       currentActiveIndex = sampleIndex;
 
-      const scanOverlay = document.getElementById("scanOverlay");
-      const arControlPanel = document.getElementById("arControlPanel");
-      const modalTitle = document.getElementById("modal-title");
+      hideScanOverlay();
+      hideAudioUnlock();
 
-      scanOverlay.style.display = "none";
-      arControlPanel.classList.add("active");
-      modalTitle.innerHTML = sample.label + ' <span class="pulse"></span>';
-
+      setStatus(sample.label);
       stopAllMediaExcept(sampleIndex);
 
       log("✅ Target " + sample.targetIndex + " found: " + sample.label);
@@ -774,13 +718,13 @@ function setupAnchors() {
         if (sample.type === "video") {
           media.muted = true;
           await media.play();
-          log("▶ Video AR playing on target " + sample.targetIndex + ". Tap sound for audio.");
+          log("▶ Video AR playing on target " + sample.targetIndex);
         } else {
           await media.play();
           log("▶ Audio playing for target " + sample.targetIndex);
         }
       } catch (error) {
-        log("⚠️ Autoplay blocked. Tap activate sound.");
+        log("⚠️ Autoplay blocked. Audio unlock required.");
         showAudioUnlock();
       }
     };
@@ -798,6 +742,9 @@ function setupAnchors() {
         currentActiveIndex = null;
       }
 
+      setStatus("AR Scanner");
+      showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
+
       log("Target " + sample.targetIndex + " lost.");
     };
   });
@@ -808,10 +755,10 @@ async function startAR() {
 
   isStarting = true;
 
-  const scanLabel = document.getElementById("scanLabel");
-
   try {
     await stopARInstance();
+
+    showScanOverlay("در حال راه‌اندازی دوربین...<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
 
     await prepareAllTargets();
 
@@ -840,14 +787,13 @@ async function startAR() {
 
     await mindarInstance.start();
 
-    scanLabel.innerHTML = "دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.";
+    showScanOverlay("دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.");
     log("✅ Camera is active. Show any of the 3 target images.");
 
     renderer.setAnimationLoop(() => {
-      const audioSampleIndex = 0;
-      const audioMesh = arMeshes[audioSampleIndex];
+      const audioMesh = arMeshes[0];
 
-      if (audioMesh && currentActiveIndex === audioSampleIndex) {
+      if (audioMesh && currentActiveIndex === 0) {
         audioMesh.rotation.z = Math.sin(Date.now() * 0.002) * 0.035;
         const scale = 1 + Math.sin(Date.now() * 0.004) * 0.025;
         audioMesh.scale.set(scale, scale, scale);
@@ -861,7 +807,7 @@ async function startAR() {
 
     const errorMessage = error && error.message ? error.message : String(error);
 
-    scanLabel.textContent = "خطا در راه‌اندازی AR";
+    showScanOverlay("خطا در راه‌اندازی AR");
     log("❌ Error:\n" + errorMessage);
   } finally {
     isStarting = false;
@@ -870,8 +816,6 @@ async function startAR() {
 
 async function enableSound() {
   hideAudioUnlock();
-
-  audioUnlocked = true;
 
   if (currentActiveIndex === null) {
     log("No active target yet.");
@@ -882,7 +826,7 @@ async function enableSound() {
   const media = mediaElements[currentActiveIndex];
 
   if (!sample || !media) {
-    log("No media is ready.");
+    log("No media ready.");
     return;
   }
 
@@ -901,68 +845,17 @@ async function enableSound() {
   }
 }
 
-function rescan() {
-  stopAllMediaExcept(null);
-
-  currentActiveIndex = null;
-
-  const scanOverlay = document.getElementById("scanOverlay");
-  const scanLabel = document.getElementById("scanLabel");
-  const arControlPanel = document.getElementById("arControlPanel");
-  const modalTitle = document.getElementById("modal-title");
-
-  scanOverlay.style.display = "flex";
-  scanLabel.innerHTML = "دوربین فعال است.<br>هرکدام از سه تصویر را جلوی دوربین بگیرید.";
-  arControlPanel.classList.remove("active");
-  modalTitle.innerHTML = 'AR Scanner <span class="pulse"></span>';
-
-  hideAudioUnlock();
-
-  log("✅ Ready to scan any target.");
-}
-
-async function closeAR() {
-  await stopARInstance();
-
-  document.getElementById("scanOverlay").style.display = "flex";
-  document.getElementById("mindar-container").innerHTML = "";
-  document.getElementById("arControlPanel").classList.remove("active");
-
-  log("AR closed");
-}
-
-function bindButtons() {
-  const closeBtn = document.getElementById("closeBtn");
-  const rescanBtn = document.getElementById("rescanBtn");
-  const soundBtn = document.getElementById("soundBtn");
+function bindEvents() {
   const audioUnlockBtn = document.getElementById("audioUnlockBtn");
-
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closeAR);
-  }
-
-  if (rescanBtn) {
-    rescanBtn.addEventListener("click", rescan);
-  }
-
-  if (soundBtn) {
-    soundBtn.addEventListener("click", enableSound);
-  }
 
   if (audioUnlockBtn) {
     audioUnlockBtn.addEventListener("click", enableSound);
   }
 
-  log("✅ App loaded. Starting camera automatically...");
+  log("✅ App loaded. Starting AR automatically...");
 }
 
-bindButtons();
-
-window.addEventListener("keydown", event => {
-  if (event.key === "Escape") {
-    closeAR();
-  }
-});
+bindEvents();
 
 window.addEventListener("load", () => {
   startAR();

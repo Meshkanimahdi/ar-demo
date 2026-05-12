@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>AR Demo Final</title>
+<title>AR Demo Final Clean</title>
 
 <style>
   * {
@@ -35,6 +35,7 @@
     width: 100%;
     height: 100%;
     background: #000;
+    overflow: hidden;
   }
 
   #mindar-container {
@@ -43,14 +44,15 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+    z-index: 1;
   }
 
   .top-status {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 999;
+    z-index: 2147483000;
     padding: max(1rem, env(safe-area-inset-top)) 1rem 1rem;
     text-align: center;
     color: #fff;
@@ -84,9 +86,9 @@
   }
 
   .scan-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    z-index: 500;
+    z-index: 2147482500;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -172,11 +174,11 @@
   }
 
   .sound-control {
-    position: absolute;
+    position: fixed;
     left: 50%;
-    bottom: max(90px, env(safe-area-inset-bottom));
+    bottom: calc(env(safe-area-inset-bottom) + 92px);
     transform: translateX(-50%);
-    z-index: 5000;
+    z-index: 2147483600;
     display: none;
     align-items: center;
     justify-content: center;
@@ -188,17 +190,17 @@
   }
 
   .sound-control button {
-    background: linear-gradient(135deg, rgba(108,99,255,.96), rgba(255,101,132,.96));
+    background: linear-gradient(135deg, rgba(108,99,255,.98), rgba(255,101,132,.98));
     color: #fff;
     border: none;
     border-radius: 999px;
-    padding: .9rem 1.35rem;
+    padding: .95rem 1.45rem;
     font-size: .95rem;
     font-weight: 800;
     cursor: pointer;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 14px 44px rgba(0,0,0,.48);
+    box-shadow: 0 14px 44px rgba(0,0,0,.58);
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -207,10 +209,10 @@
   }
 
   .audio-unlock {
-    position: absolute;
+    position: fixed;
     left: 50%;
     top: 50%;
-    z-index: 5000;
+    z-index: 2147483600;
     transform: translate(-50%, -50%);
     display: none;
     width: min(86vw, 360px);
@@ -253,11 +255,11 @@
   }
 
   #debug {
-    position: absolute;
+    position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 998;
+    z-index: 2147482000;
     padding: 8px 12px;
     background: rgba(0,0,0,.72);
     color: #4ade80;
@@ -355,6 +357,7 @@ const SAMPLES = [
 let mindarInstance = null;
 let currentActiveIndex = null;
 let isStarting = false;
+let videoSoundEnabled = false;
 
 const anchors = [];
 const arMeshes = [];
@@ -774,12 +777,16 @@ function setupAnchors() {
 
       try {
         if (sample.type === "video") {
-          showSoundControl();
-
-          media.muted = true;
+          media.muted = !videoSoundEnabled;
           await media.play();
 
-          log("▶ Video AR playing muted on target " + sample.targetIndex + ". Sound button is visible.");
+          if (!videoSoundEnabled) {
+            showSoundControl();
+          } else {
+            hideSoundControl();
+          }
+
+          log("▶ Video AR playing on target " + sample.targetIndex + ". Sound button state updated.");
         } else {
           hideSoundControl();
 
@@ -908,6 +915,8 @@ async function enableSound() {
 
   try {
     if (sample.type === "video") {
+      videoSoundEnabled = true;
+
       media.muted = false;
       media.volume = 1;
       await media.play();

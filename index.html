@@ -17,9 +17,9 @@
     --surface: #13131a;
     --accent: #6c63ff;
     --accent2: #ff6584;
-    --text: #f0eeff;
-    --muted: #8887a0;
-    --border: rgba(108, 99, 255, 0.2);
+    --text:#f0eeff;
+    --muted:#8887a0;
+    --border: rgba(108,99,255,0.2);
   }
 
   body {
@@ -107,15 +107,15 @@
     text-transform: uppercase;
     padding: 2px 8px;
     border-radius: 20px;
-    background: rgba(108, 99, 255, 0.15);
+    background: rgba(108,99,255,0.15);
     color: var(--accent);
-    border: 1px solid rgba(108, 99, 255, 0.3);
+    border: 1px solid rgba(108,99,255,0.3);
   }
 
   .btn.audio .badge {
-    background: rgba(255, 101, 132, 0.12);
+    background: rgba(255,101,132,0.12);
     color: var(--accent2);
-    border-color: rgba(255, 101, 132, 0.3);
+    border-color: rgba(255,101,132,0.3);
   }
 
   .hint {
@@ -273,7 +273,7 @@
   }
 
   @keyframes scanAnim {
-    0%, 100% {
+    0%,100% {
       top: 18px;
       opacity: .5;
     }
@@ -338,7 +338,7 @@
   }
 
   @keyframes pulseAnim {
-    0%, 100% {
+    0%,100% {
       opacity: .3;
       transform: scale(.8);
     }
@@ -388,7 +388,7 @@
 
 <p class="hint">
   هر دکمه دوربین را فعال می‌کند.<br>
-  تصویر مربوطه را جلوی دوربین بگیرید تا محتوا دقیقاً روی خود تصویر ظاهر شود.
+  تصویر مربوطه را جلوی دوربین بگیرید تا محتوا دقیقاً روی همان تصویر قفل شود.
 </p>
 
 <div class="modal" id="modal">
@@ -440,18 +440,21 @@ const SAMPLES = [
     label: "Sample 1 — Audio",
     type: "audio",
     mindFile: "./A01.mind",
+    targetImage: "./a01.webp",
     mediaUrl: "./A01.mp3"
   },
   {
     label: "Sample 2 — Video",
     type: "video",
     mindFile: "./A02.mind",
+    targetImage: "./a02.jpg",
     mediaUrl: "./A02.mp4"
   },
   {
     label: "Sample 3 — Video",
     type: "video",
     mindFile: "./A03.mind",
+    targetImage: "./a03.jpg",
     mediaUrl: "./A03.mp4"
   }
 ];
@@ -460,8 +463,9 @@ let mindarInstance = null;
 let currentSample = null;
 let currentAnchor = null;
 let currentMediaElement = null;
-let currentVideoTexture = null;
+let currentTexture = null;
 let currentARMesh = null;
+let currentTargetAspect = 16 / 9;
 let isStarting = false;
 let targetIsVisible = false;
 
@@ -475,6 +479,47 @@ function log(message) {
   console.log(message);
 }
 
+function loadImageAspect(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+
+    img.onload = () => {
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+
+      if (!width || !height) {
+        resolve(16 / 9);
+        return;
+      }
+
+      resolve(width / height);
+    };
+
+    img.onerror = () => {
+      resolve(16 / 9);
+    };
+
+    img.src = src;
+  });
+}
+
+function applyCoverUV(texture, mediaAspect, targetAspect) {
+  texture.offset.set(0, 0);
+  texture.repeat.set(1, 1);
+
+  if (!mediaAspect || !targetAspect) return;
+
+  if (mediaAspect > targetAspect) {
+    const repeatX = targetAspect / mediaAspect;
+    texture.repeat.set(repeatX, 1);
+    texture.offset.set((1 - repeatX) / 2, 0);
+  } else if (mediaAspect < targetAspect) {
+    const repeatY = mediaAspect / targetAspect;
+    texture.repeat.set(1, repeatY);
+    texture.offset.set(0, (1 - repeatY) / 2);
+  }
+}
+
 function clearARContent() {
   targetIsVisible = false;
 
@@ -484,9 +529,16 @@ function clearARContent() {
     } catch (error) {}
   }
 
-  if (currentVideoTexture) {
+  if (currentTexture) {
     try {
-      currentVideoTexture.dispose();
+      currentTexture.dispose();
+    } catch (error) {}
+  }
+
+  if (currentARMesh) {
+    try {
+      if (currentARMesh.geometry) currentARMesh.geometry.dispose();
+      if (currentARMesh.material) currentARMesh.material.dispose();
     } catch (error) {}
   }
 
@@ -500,7 +552,7 @@ function clearARContent() {
 
   currentAnchor = null;
   currentARMesh = null;
-  currentVideoTexture = null;
+  currentTexture = null;
   currentMediaElement = null;
 
   const arControlPanel = document.getElementById("arControlPanel");
@@ -529,6 +581,20 @@ async function stopARInstance() {
   }
 
   mindarInstance = null;
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
 }
 
 function createAudioCardTexture(textLine1, textLine2) {
@@ -572,68 +638,25 @@ function createAudioCardTexture(textLine1, textLine2) {
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
+
   return texture;
 }
 
-function roundRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
-
 function createAudioARMesh() {
-  const texture = createAudioCardTexture("Audio Experience", "Tap sound if needed");
+  const texture = createAudioCardTexture("Audio Experience", "Sound attached to this image");
 
-  const geometry = new THREE.PlaneGeometry(1, 0.62);
+  currentTexture = texture;
+
+  const targetWidth = 1;
+  const targetHeight = 1 / currentTargetAspect;
+
+  const geometry = new THREE.PlaneGeometry(targetWidth, targetHeight);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
-    side: THREE.DoubleSide
-  });
-
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(0, 0, 0.02);
-
-  currentVideoTexture = texture;
-  currentARMesh = mesh;
-
-  return mesh;
-}
-
-function createVideoARMesh(videoElement) {
-  const texture = new THREE.VideoTexture(videoElement);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = false;
-
-  currentVideoTexture = texture;
-
-  const videoAspect = videoElement.videoWidth && videoElement.videoHeight
-    ? videoElement.videoWidth / videoElement.videoHeight
-    : 16 / 9;
-
-  let width = 1.0;
-  let height = width / videoAspect;
-
-  if (height > 1.0) {
-    height = 1.0;
-    width = height * videoAspect;
-  }
-
-  const geometry = new THREE.PlaneGeometry(width, height);
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: false,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false
   });
 
   const mesh = new THREE.Mesh(geometry, material);
@@ -673,6 +696,51 @@ function createAudioElement(src) {
   return audio;
 }
 
+function createVideoARMesh(videoElement) {
+  const texture = new THREE.VideoTexture(videoElement);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  const videoWidth = videoElement.videoWidth || 1920;
+  const videoHeight = videoElement.videoHeight || 1080;
+  const videoAspect = videoWidth / videoHeight;
+
+  applyCoverUV(texture, videoAspect, currentTargetAspect);
+
+  currentTexture = texture;
+
+  const targetWidth = 1;
+  const targetHeight = 1 / currentTargetAspect;
+
+  const geometry = new THREE.PlaneGeometry(targetWidth, targetHeight);
+
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: false,
+    side: THREE.DoubleSide,
+    depthTest: true,
+    depthWrite: false
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+
+  mesh.position.set(0, 0, 0.02);
+  mesh.rotation.set(0, 0, 0);
+
+  currentARMesh = mesh;
+
+  log(
+    "✅ AR video plane matched to target image\n" +
+    "target aspect: " + currentTargetAspect.toFixed(4) + "\n" +
+    "video aspect: " + videoAspect.toFixed(4) + "\n" +
+    "plane: " + targetWidth.toFixed(3) + " x " + targetHeight.toFixed(3)
+  );
+
+  return mesh;
+}
+
 async function startAR(index) {
   if (isStarting) return;
 
@@ -699,7 +767,15 @@ async function startAR(index) {
     log("Stopping previous AR instance...");
     await stopARInstance();
 
-    log("Loading target file:\n" + currentSample.mindFile);
+    log("Reading target image size:\n" + currentSample.targetImage);
+    currentTargetAspect = await loadImageAspect(currentSample.targetImage);
+
+    log(
+      "Target image aspect detected: " +
+      currentTargetAspect.toFixed(4) +
+      "\nLoading target file:\n" +
+      currentSample.mindFile
+    );
 
     mindarInstance = new MindARThree({
       container: mindarContainer,
@@ -730,7 +806,11 @@ async function startAR(index) {
         const mesh = createVideoARMesh(video);
         currentAnchor.group.add(mesh);
 
-        log("✅ Video texture prepared. Show target image.");
+        log("✅ Video fitted to detected target image ratio. Show target image.");
+      });
+
+      video.addEventListener("canplay", () => {
+        log("✅ Video can play. Waiting for target detection.");
       });
 
       video.addEventListener("error", () => {
@@ -765,7 +845,7 @@ async function startAR(index) {
           if (currentSample.type === "video") {
             currentMediaElement.muted = true;
             await currentMediaElement.play();
-            log("▶ AR video playing on image. Tap sound button for audio.");
+            log("▶ AR video playing on exact target plane. Tap sound button for audio.");
           } else {
             await currentMediaElement.play();
             log("▶ AR audio playing. Audio card locked on image.");

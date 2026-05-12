@@ -174,32 +174,31 @@
   .sound-control {
     position: absolute;
     left: 50%;
-    bottom: max(72px, env(safe-area-inset-bottom));
+    bottom: max(90px, env(safe-area-inset-bottom));
     transform: translateX(-50%);
-    z-index: 1000;
+    z-index: 5000;
     display: none;
     align-items: center;
     justify-content: center;
-    gap: .5rem;
     pointer-events: auto;
   }
 
   .sound-control.active {
-    display: flex;
+    display: flex !important;
   }
 
   .sound-control button {
-    background: rgba(10,10,15,.86);
+    background: linear-gradient(135deg, rgba(108,99,255,.96), rgba(255,101,132,.96));
     color: #fff;
-    border: 1px solid rgba(108,99,255,.38);
+    border: none;
     border-radius: 999px;
-    padding: .78rem 1.2rem;
-    font-size: .9rem;
-    font-weight: 700;
+    padding: .9rem 1.35rem;
+    font-size: .95rem;
+    font-weight: 800;
     cursor: pointer;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    box-shadow: 0 14px 40px rgba(0,0,0,.32);
+    box-shadow: 0 14px 44px rgba(0,0,0,.48);
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -211,7 +210,7 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    z-index: 1000;
+    z-index: 5000;
     transform: translate(-50%, -50%);
     display: none;
     width: min(86vw, 360px);
@@ -297,7 +296,7 @@
   </div>
 
   <div class="sound-control" id="soundControl">
-    <button id="soundBtn" type="button">🔊 فعال‌سازی صدا</button>
+    <button id="soundBtn" type="button">🔊 روشن کردن صدای ویدیو</button>
   </div>
 
   <div class="audio-unlock" id="audioUnlock">
@@ -404,12 +403,20 @@ function hideScanOverlay() {
 
 function showSoundControl() {
   const soundControl = document.getElementById("soundControl");
-  if (soundControl) soundControl.classList.add("active");
+
+  if (soundControl) {
+    soundControl.classList.add("active");
+    soundControl.style.display = "flex";
+  }
 }
 
 function hideSoundControl() {
   const soundControl = document.getElementById("soundControl");
-  if (soundControl) soundControl.classList.remove("active");
+
+  if (soundControl) {
+    soundControl.classList.remove("active");
+    soundControl.style.display = "none";
+  }
 }
 
 function showAudioUnlock() {
@@ -767,12 +774,12 @@ function setupAnchors() {
 
       try {
         if (sample.type === "video") {
+          showSoundControl();
+
           media.muted = true;
           await media.play();
 
-          showSoundControl();
-
-          log("▶ Video AR playing muted on target " + sample.targetIndex + ". Tap sound button.");
+          log("▶ Video AR playing muted on target " + sample.targetIndex + ". Sound button is visible.");
         } else {
           hideSoundControl();
 
@@ -783,7 +790,7 @@ function setupAnchors() {
       } catch (error) {
         if (sample.type === "video") {
           showSoundControl();
-          log("⚠️ Video audio requires tap. Sound button shown.");
+          log("⚠️ Video is ready. Tap sound button if sound is needed.");
         } else {
           showAudioUnlock();
           log("⚠️ Audio autoplay blocked. Unlock required.");
@@ -886,8 +893,6 @@ async function startAR() {
 }
 
 async function enableSound() {
-  hideAudioUnlock();
-
   if (currentActiveIndex === null) {
     log("No active target yet.");
     return;
@@ -904,6 +909,7 @@ async function enableSound() {
   try {
     if (sample.type === "video") {
       media.muted = false;
+      media.volume = 1;
       await media.play();
 
       hideSoundControl();
@@ -911,6 +917,8 @@ async function enableSound() {
       log("🔊 Video sound enabled for target " + sample.targetIndex);
     } else {
       await media.play();
+
+      hideAudioUnlock();
 
       log("🔊 Audio enabled for target " + sample.targetIndex);
     }
